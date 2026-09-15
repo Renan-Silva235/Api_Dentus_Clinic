@@ -6,6 +6,7 @@ public interface IPacienteRepository
 {
     Task<IEnumerable<Paciente>> ListarTodosAsync();
     Task<Paciente?> BuscarPorIdAsync(int id);
+    Task<Paciente?> BuscarPorLoginIdAsync(int idLogin);
     Task<bool> ExisteCpfAsync(string cpf, int? idExcluido = null);
     Task<bool> ExisteEmailAsync(string email, int? idExcluido = null);
     Task AdicionarAsync(Paciente paciente);

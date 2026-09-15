@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DentusClinic.API.Models;
 
@@ -18,6 +19,11 @@ public class Paciente : Usuario
 
     public bool Ativo { get; set; } = true;
 
+    [ForeignKey(nameof(Login))]
+    public int? IdAcesso { get; set; }
+    public Login? Login { get; set; }
+
     public ICollection<Consulta> Consultas { get; set; } = new List<Consulta>();
     public Prontuario? Prontuario { get; set; }
+    public ICollection<DispositivoPaciente> DispositivosPaciente { get; set; } = new List<DispositivoPaciente>();
 }

@@ -1,3 +1,4 @@
+using DentusClinic.API.Enums;
 using DentusClinic.API.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<Prontuario> Prontuarios { get; set; }
     public DbSet<Servico> Servicos { get; set; }
     public DbSet<Planos> Planos { get; set; }
+    public DbSet<DispositivoPaciente> DispositivosPaciente { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -30,6 +32,7 @@ public class AppDbContext : DbContext
             e.HasIndex(x => x.Email).IsUnique();
             e.Property(x => x.Senha).IsRequired();
             e.Property(x => x.TipoAcesso).IsRequired().HasMaxLength(20);
+            e.Property(x => x.PrimeiroAcesso).IsRequired().HasDefaultValue(true);
         });
 
         // Especialidade
@@ -81,6 +84,11 @@ public class AppDbContext : DbContext
             e.HasIndex(x => x.Cpf).IsUnique();
             e.Property(x => x.Email).IsRequired().HasMaxLength(150);
             e.HasIndex(x => x.Email).IsUnique();
+            e.HasOne(x => x.Login)
+             .WithOne(x => x.Paciente)
+             .HasForeignKey<Paciente>(x => x.IdAcesso)
+             .IsRequired(false)
+             .OnDelete(DeleteBehavior.Restrict);
         });
 
         // Consulta
@@ -88,6 +96,7 @@ public class AppDbContext : DbContext
         {
             e.HasKey(x => x.Id);
             e.Property(x => x.Status).IsRequired().HasMaxLength(20);
+            e.Property(x => x.StatusConfirmacao).IsRequired().HasDefaultValue(StatusConfirmacaoEnum.Pendente);
             e.HasOne(x => x.Dentista)
              .WithMany(x => x.Consultas)
              .HasForeignKey(x => x.IdDentista)
@@ -99,6 +108,17 @@ public class AppDbContext : DbContext
             e.HasOne(x => x.Servico)
              .WithMany()
              .HasForeignKey(x => x.IdServico)
+             .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // DispositivoPaciente
+        modelBuilder.Entity<DispositivoPaciente>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.TokenPush).IsRequired();
+            e.HasOne(x => x.Paciente)
+             .WithMany(x => x.DispositivosPaciente)
+             .HasForeignKey(x => x.IdPaciente)
              .OnDelete(DeleteBehavior.Restrict);
         });
 

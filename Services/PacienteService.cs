@@ -1,6 +1,7 @@
 using DentusClinic.API.Data;
 using DentusClinic.API.DTOs.Request;
 using DentusClinic.API.DTOs.Response;
+using DentusClinic.API.Enums;
 using DentusClinic.API.Interfaces;
 using DentusClinic.API.Models;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +20,7 @@ public class PacienteService : IPacienteService
     public async Task<IEnumerable<PacienteResponse>> ListarTodosAsync()
     {
         var lista = await _context.Pacientes.Where(p => p.Ativo).ToListAsync();
-        return lista.Select(MapearResponse);
+        return lista.Select(p => MapearResponse(p));
     }
 
     public async Task<PacienteResponse?> BuscarPorIdAsync(int id)
@@ -34,6 +35,21 @@ public class PacienteService : IPacienteService
             throw new InvalidOperationException("CPF já cadastrado no sistema.");
         if (await _context.Pacientes.AnyAsync(p => p.Email == request.Email))
             throw new InvalidOperationException("Email já cadastrado no sistema.");
+        if (await _context.Logins.AnyAsync(l => l.Email == request.Email))
+            throw new InvalidOperationException("Email já cadastrado no sistema.");
+
+        // RN12: Login com senha temporária, criado automaticamente junto do paciente
+        // (mesmo padrão do FuncionarioService), para acesso ao app mobile.
+        var senhaTemporaria = Random.Shared.Next(100000, 999999).ToString();
+        var login = new Login
+        {
+            Email = request.Email,
+            Senha = BCrypt.Net.BCrypt.HashPassword(senhaTemporaria),
+            TipoAcesso = TiposAcessoEnum.PACIENTE,
+            PrimeiroAcesso = true
+        };
+        _context.Logins.Add(login);
+        await _context.SaveChangesAsync();
 
         var paciente = new Paciente
         {
@@ -42,7 +58,8 @@ public class PacienteService : IPacienteService
             Telefone = request.Telefone,
             Email = request.Email,
             DataNascimento = request.DataNascimento,
-            Endereco = request.Endereco
+            Endereco = request.Endereco,
+            IdAcesso = login.Id
         };
 
         _context.Pacientes.Add(paciente);
@@ -57,7 +74,9 @@ public class PacienteService : IPacienteService
         _context.Prontuarios.Add(prontuario);
         await _context.SaveChangesAsync();
 
-        return MapearResponse(paciente);
+        // A senha temporária só existe em texto puro neste momento (depois fica só o
+        // hash) — vai na resposta do cadastro para quem cadastrou repassar ao paciente.
+        return MapearResponse(paciente, senhaTemporaria);
     }
 
     public async Task<PacienteResponse?> EditarAsync(int id, PacienteEditarRequest request)
@@ -98,7 +117,7 @@ public class PacienteService : IPacienteService
         return true;
     }
 
-    private static PacienteResponse MapearResponse(Paciente p) => new()
+    private static PacienteResponse MapearResponse(Paciente p, string? senhaTemporaria = null) => new()
     {
         Id = p.Id,
         Nome = p.Nome,
@@ -106,6 +125,7 @@ public class PacienteService : IPacienteService
         Telefone = p.Telefone,
         Email = p.Email,
         DataNascimento = p.DataNascimento,
-        Endereco = p.Endereco
+        Endereco = p.Endereco,
+        SenhaTemporaria = senhaTemporaria
     };
 }

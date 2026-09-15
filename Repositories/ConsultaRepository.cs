@@ -35,6 +35,34 @@ public class ConsultaRepository : IConsultaRepository
             .OrderBy(c => c.HoraConsulta)
             .ToListAsync();
 
+    public async Task<IEnumerable<Consulta>> ListarFuturasPorPacienteAsync(int idPaciente)
+    {
+        var hoje = DateOnly.FromDateTime(DateTime.Today);
+        var horaAgora = TimeOnly.FromDateTime(DateTime.Now);
+
+        return await _contexto.Consultas
+            .Where(c => c.IdPaciente == idPaciente
+                     && c.Status != "Cancelada" && c.Status != "Inativa"
+                     && (c.DataConsulta > hoje || (c.DataConsulta == hoje && c.HoraConsulta >= horaAgora)))
+            .Include(c => c.Dentista).Include(c => c.Paciente).Include(c => c.Servico)
+            .OrderBy(c => c.DataConsulta).ThenBy(c => c.HoraConsulta)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Consulta>> ListarHistoricoPorPacienteAsync(int idPaciente)
+    {
+        var hoje = DateOnly.FromDateTime(DateTime.Today);
+        var horaAgora = TimeOnly.FromDateTime(DateTime.Now);
+
+        return await _contexto.Consultas
+            .Where(c => c.IdPaciente == idPaciente
+                     && c.Status != "Inativa"
+                     && (c.DataConsulta < hoje || (c.DataConsulta == hoje && c.HoraConsulta < horaAgora)))
+            .Include(c => c.Dentista).Include(c => c.Paciente).Include(c => c.Servico)
+            .OrderByDescending(c => c.DataConsulta).ThenByDescending(c => c.HoraConsulta)
+            .ToListAsync();
+    }
+
     public async Task<Consulta?> BuscarPorIdAsync(int id)
         => await _contexto.Consultas.Include(c => c.Dentista).Include(c => c.Paciente).Include(c => c.Servico).FirstOrDefaultAsync(c => c.Id == id);
 

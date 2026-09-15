@@ -50,6 +50,7 @@ builder.Services.AddScoped<IProntuarioService, ProntuarioService>();
 
 builder.Services.AddScoped<IServicoService, ServicoService>();
 builder.Services.AddScoped<IPlanosService, PlanosService>();
+builder.Services.AddScoped<IPacienteAppService, PacienteAppService>();
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -80,7 +81,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:5500")
+        policy.WithOrigins("http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:5500", "http://localhost:5500")
               .AllowAnyHeader()
               .AllowAnyMethod();
     });

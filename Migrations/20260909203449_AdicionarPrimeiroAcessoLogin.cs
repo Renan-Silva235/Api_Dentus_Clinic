@@ -5,24 +5,25 @@
 namespace DentusClinic.API.Migrations
 {
     /// <inheritdoc />
-    public partial class PlanosDente : Migration
+    public partial class AdicionarPrimeiroAcessoLogin : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "Dente",
-                table: "Planos",
-                type: "nvarchar(max)",
-                nullable: true);
+            migrationBuilder.AddColumn<bool>(
+                name: "PrimeiroAcesso",
+                table: "Logins",
+                type: "bit",
+                nullable: false,
+                defaultValue: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "Dente",
-                table: "Planos");
+                name: "PrimeiroAcesso",
+                table: "Logins");
         }
     }
 }

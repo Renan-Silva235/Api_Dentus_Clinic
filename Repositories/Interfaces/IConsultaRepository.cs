@@ -7,6 +7,8 @@ public interface IConsultaRepository
     Task<IEnumerable<Consulta>> ListarTodosAsync();
     Task<IEnumerable<Consulta>> ListarHojeAsync();
     Task<IEnumerable<Consulta>> ListarPorDentistaEDataAsync(int idDentista, DateOnly data);
+    Task<IEnumerable<Consulta>> ListarFuturasPorPacienteAsync(int idPaciente);
+    Task<IEnumerable<Consulta>> ListarHistoricoPorPacienteAsync(int idPaciente);
     Task<Consulta?> BuscarPorIdAsync(int id);
     Task<bool> ExisteConflitoAsync(int idDentista, DateOnly data, TimeOnly hora, int? idExcluido = null);
     Task AdicionarAsync(Consulta consulta);

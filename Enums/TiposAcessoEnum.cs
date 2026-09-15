@@ -2,6 +2,7 @@
     public enum TiposAcessoEnum {
         DENTISTA,
         SECRETARIA,
-        ADMINISTRADOR
+        ADMINISTRADOR,
+        PACIENTE
     }
 }

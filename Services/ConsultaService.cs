@@ -1,5 +1,6 @@
 using DentusClinic.API.DTOs.Request;
 using DentusClinic.API.DTOs.Response;
+using DentusClinic.API.Enums;
 using DentusClinic.API.Models;
 using DentusClinic.API.Repositories.Interfaces;
 using DentusClinic.API.Services.Interfaces;
@@ -32,6 +33,18 @@ public class ConsultaService : IConsultaService
     public async Task<IEnumerable<ConsultaResponse>> ListarPorDentistaEDataAsync(int idDentista, DateOnly data)
     {
         var lista = await _consultaRepository.ListarPorDentistaEDataAsync(idDentista, data);
+        return lista.Select(MapearResponse);
+    }
+
+    public async Task<IEnumerable<ConsultaResponse>> ListarFuturasPorPacienteAsync(int idPaciente)
+    {
+        var lista = await _consultaRepository.ListarFuturasPorPacienteAsync(idPaciente);
+        return lista.Select(MapearResponse);
+    }
+
+    public async Task<IEnumerable<ConsultaResponse>> ListarHistoricoPorPacienteAsync(int idPaciente)
+    {
+        var lista = await _consultaRepository.ListarHistoricoPorPacienteAsync(idPaciente);
         return lista.Select(MapearResponse);
     }
 
@@ -152,6 +165,46 @@ public class ConsultaService : IConsultaService
         return true;
     }
 
+    // RN14/RN17/RN19: lógica de confirmação/recusa de presença, compartilhada entre o
+    // app do paciente (PacienteAppService) e o funcionário (ConsultaController), para
+    // não duplicar as validações de prazo.
+    public async Task ConfirmarPresencaAsync(int idConsulta)
+    {
+        var consulta = await _consultaRepository.BuscarPorIdAsync(idConsulta)
+            ?? throw new InvalidOperationException("Consulta não encontrada.");
+
+        ValidarPrazoDeAcao(consulta);
+
+        consulta.StatusConfirmacao = StatusConfirmacaoEnum.Confirmada;
+        await _consultaRepository.AtualizarAsync(consulta);
+    }
+
+    public async Task RecusarPresencaAsync(int idConsulta)
+    {
+        var consulta = await _consultaRepository.BuscarPorIdAsync(idConsulta)
+            ?? throw new InvalidOperationException("Consulta não encontrada.");
+
+        ValidarPrazoDeAcao(consulta);
+
+        consulta.StatusConfirmacao = StatusConfirmacaoEnum.Recusada;
+        consulta.Status = "Cancelada"; // RN18: recusa cancela a consulta automaticamente
+        await _consultaRepository.AtualizarAsync(consulta);
+    }
+
+    // RN19: bloqueia ação em consulta cujo horário já passou.
+    // RN14: bloqueia ação a menos de 1h do horário agendado.
+    private static void ValidarPrazoDeAcao(Consulta consulta)
+    {
+        var agora = DateTime.Now;
+        var horarioConsulta = consulta.DataConsulta.ToDateTime(consulta.HoraConsulta);
+
+        if (horarioConsulta < agora)
+            throw new InvalidOperationException("Não é possível realizar ações em consultas já finalizadas.");
+
+        if (horarioConsulta - agora < TimeSpan.FromHours(1))
+            throw new InvalidOperationException("Prazo para confirmação expirado.");
+    }
+
     private static ConsultaResponse MapearResponse(Consulta c) => new()
     {
         Id = c.Id,
@@ -159,6 +212,7 @@ public class ConsultaService : IConsultaService
         HoraConsulta = c.HoraConsulta,
         Retorno = c.Retorno,
         Status = c.Status,
+        StatusConfirmacao = c.StatusConfirmacao.ToString(),
         IdDentista = c.IdDentista,
         IdPaciente = c.IdPaciente,
         IdServico = c.IdServico,
