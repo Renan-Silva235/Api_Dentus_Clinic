@@ -25,5 +25,5 @@ public class Paciente : Usuario
 
     public ICollection<Consulta> Consultas { get; set; } = new List<Consulta>();
     public Prontuario? Prontuario { get; set; }
-    public ICollection<DispositivoPaciente> DispositivosPaciente { get; set; } = new List<DispositivoPaciente>();
+    public ICollection<Dispositivo> Dispositivos { get; set; } = new List<Dispositivo>();
 }

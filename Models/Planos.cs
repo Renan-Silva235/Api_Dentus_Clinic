@@ -22,4 +22,9 @@ public class Planos
     public DateOnly DataCriacao { get; set; } = DateOnly.FromDateTime(DateTime.Today);
 
     public DateOnly? DataAtualizacao { get; set; }
+
+    public int? PlanoAnteriorId { get; set; }
+    public Planos? PlanoAnterior { get; set; }
+
+    public bool VersaoAtual { get; set; } = true;
 }

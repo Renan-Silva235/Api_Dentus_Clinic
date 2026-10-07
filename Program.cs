@@ -161,10 +161,13 @@ builder.Services.AddSwaggerGen(c =>
         Description = "Informe o token JWT no formato: Bearer {token}"
     });
 
-    c.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
+    // O documento precisa ser repassado para a referência resolver o esquema;
+    // sem ele o swagger.json sai com "security": [{}] e o Swagger UI nunca
+    // envia o header Authorization, mesmo após o Authorize.
+    c.AddSecurityRequirement(documento => new OpenApiSecurityRequirement
     {
         {
-            new OpenApiSecuritySchemeReference("Bearer"),
+            new OpenApiSecuritySchemeReference("Bearer", documento),
             []
         }
     });

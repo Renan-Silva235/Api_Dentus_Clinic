@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DentusClinic.API.Models;
 
-public class DispositivoPaciente
+public class Dispositivo
 {
     public int Id { get; set; }
 
@@ -13,6 +13,9 @@ public class DispositivoPaciente
 
     [Required]
     public string TokenPush { get; set; } = string.Empty;
+
+    [Required]
+    public string Plataforma { get; set; } = string.Empty; // "Android" ou "iOS"
 
     public DateTime DataCadastro { get; set; } = DateTime.UtcNow;
 

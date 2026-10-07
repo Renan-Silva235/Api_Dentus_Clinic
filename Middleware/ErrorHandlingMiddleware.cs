@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace DentusClinic.API.Middleware;
@@ -40,6 +41,11 @@ public class ErrorHandlingMiddleware
 
     private static string ObterMensagemBancoDados(DbUpdateException ex)
     {
+        // Erro a partir de 50000 é RAISERROR/THROW dos nossos triggers e procedures:
+        // a mensagem já está escrita para o usuário final.
+        if (ex.InnerException is SqlException sql && sql.Number >= 50000)
+            return sql.Message;
+
         var mensagemInterna = ex.InnerException?.Message ?? string.Empty;
 
         if (mensagemInterna.Contains("UNIQUE") || mensagemInterna.Contains("unique") ||

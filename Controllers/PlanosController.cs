@@ -42,6 +42,16 @@ public class PlanosController : ControllerBase
         return Ok(ApiResponse<object>.Ok(plano));
     }
 
+    [HttpGet("{id}/historico")]
+    public async Task<IActionResult> ListarHistorico(int id)
+    {
+        var historico = await _planosService.ListarHistoricoAsync(id);
+        if (!historico.Any())
+            return NotFound(ApiResponse<object>.Erro("Plano não encontrado."));
+
+        return Ok(ApiResponse<object>.Ok(historico));
+    }
+
     [HttpPost]
     public async Task<IActionResult> Cadastrar([FromBody] PlanosRequest request)
     {
@@ -53,21 +63,17 @@ public class PlanosController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Editar(int id, [FromBody] PlanosRequest request)
     {
-        var plano = await _planosService.EditarAsync(id, request);
-        if (plano is null)
-            return NotFound(ApiResponse<object>.Erro("Plano não encontrado."));
+        try
+        {
+            var plano = await _planosService.EditarAsync(id, request);
+            if (plano is null)
+                return NotFound(ApiResponse<object>.Erro("Plano não encontrado."));
 
-        return Ok(ApiResponse<object>.Ok(plano, "Plano atualizado com sucesso."));
-    }
-
-    [HttpDelete("{id}")]
-    [Authorize(Roles = "ADMINISTRADOR")]
-    public async Task<IActionResult> Remover(int id)
-    {
-        var removido = await _planosService.RemoverAsync(id);
-        if (!removido)
-            return NotFound(ApiResponse<object>.Erro("Plano não encontrado."));
-
-        return Ok(ApiResponse<object>.Ok("Plano removido com sucesso."));
+            return Ok(ApiResponse<object>.Ok(plano, "Nova versão do plano registrada com sucesso."));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse<object>.Erro(ex.Message));
+        }
     }
 }

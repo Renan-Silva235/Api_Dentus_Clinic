@@ -35,6 +35,12 @@ public class PlanosService : IPlanosService
         return plano is null ? null : MapearResponse(plano);
     }
 
+    public async Task<IEnumerable<PlanosResponse>> ListarHistoricoAsync(int id)
+    {
+        var cadeia = await _planosRepository.ListarCadeiaAsync(id);
+        return cadeia.Select(MapearResponse).ToList();
+    }
+
     public async Task<PlanosResponse> CadastrarAsync(PlanosRequest request)
     {
         var plano = new Planos
@@ -45,7 +51,9 @@ public class PlanosService : IPlanosService
             Condicao = request.Condicao,
             Status = request.Status,
             Observacao = request.Observacao,
-            Dente = request.Dente
+            Dente = request.Dente,
+            VersaoAtual = true,
+            DataAtualizacao = DateOnly.FromDateTime(DateTime.Today)
         };
 
         await _planosRepository.AdicionarAsync(plano);
@@ -54,33 +62,36 @@ public class PlanosService : IPlanosService
         return MapearResponse(planoSalvo!);
     }
 
+    // Planos são append-only: editar significa registrar uma nova versão,
+    // mantendo o registro anterior intacto para fins legais e de auditoria.
     public async Task<PlanosResponse?> EditarAsync(int id, PlanosRequest request)
     {
-        var plano = await _planosRepository.BuscarPorIdAsync(id);
-        if (plano is null) return null;
+        var planoAtual = await _planosRepository.BuscarPorIdAsync(id);
+        if (planoAtual is null) return null;
 
-        plano.IdServico = request.IdServico;
-        plano.Descricao = request.Descricao;
-        plano.Condicao = request.Condicao;
-        plano.Status = request.Status;
-        plano.Observacao = request.Observacao;
-        plano.Dente = request.Dente;
-        plano.DataAtualizacao = DateOnly.FromDateTime(DateTime.Today);
+        if (!planoAtual.VersaoAtual)
+            throw new InvalidOperationException(
+                "Este plano não é a versão atual. Apenas a versão atual pode receber uma nova versão.");
 
-        await _planosRepository.AtualizarAsync(plano);
-        await _prontuarioRepository.AtualizarDataAsync(plano.IdProntuario, plano.DataAtualizacao.Value);
+        var novaVersao = new Planos
+        {
+            IdProntuario = planoAtual.IdProntuario,
+            IdServico = request.IdServico,
+            Descricao = request.Descricao,
+            Condicao = request.Condicao,
+            Status = request.Status,
+            Observacao = request.Observacao,
+            Dente = request.Dente,
+            PlanoAnteriorId = planoAtual.Id,
+            VersaoAtual = true,
+            DataAtualizacao = DateOnly.FromDateTime(DateTime.Today)
+        };
 
-        var planoAtualizado = await _planosRepository.BuscarPorIdAsync(id);
-        return MapearResponse(planoAtualizado!);
-    }
+        await _planosRepository.RegistrarNovaVersaoAsync(planoAtual, novaVersao);
+        await _prontuarioRepository.AtualizarDataAsync(novaVersao.IdProntuario, novaVersao.DataAtualizacao.Value);
 
-    public async Task<bool> RemoverAsync(int id)
-    {
-        var plano = await _planosRepository.BuscarPorIdAsync(id);
-        if (plano is null) return false;
-
-        await _planosRepository.RemoverAsync(plano);
-        return true;
+        var planoSalvo = await _planosRepository.BuscarPorIdAsync(novaVersao.Id);
+        return MapearResponse(planoSalvo!);
     }
 
     private static PlanosResponse MapearResponse(Planos p) => new()
@@ -95,6 +106,8 @@ public class PlanosService : IPlanosService
         Observacao = p.Observacao,
         Dente = p.Dente,
         DataCriacao = p.DataCriacao,
-        DataAtualizacao = p.DataAtualizacao
+        DataAtualizacao = p.DataAtualizacao,
+        PlanoAnteriorId = p.PlanoAnteriorId,
+        VersaoAtual = p.VersaoAtual
     };
 }

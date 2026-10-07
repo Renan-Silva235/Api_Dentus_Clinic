@@ -15,16 +15,57 @@ public class PlanosRepository : IPlanosRepository
     }
 
     public async Task<IEnumerable<Planos>> ListarTodosAsync()
-        => await _contexto.Planos.Include(p => p.Servico).ToListAsync();
+        => await _contexto.Planos
+            .Where(p => p.VersaoAtual)
+            .Include(p => p.Servico)
+            .ToListAsync();
 
     public async Task<IEnumerable<Planos>> ListarPorProntuarioAsync(int idProntuario)
         => await _contexto.Planos
-            .Where(p => p.IdProntuario == idProntuario)
+            .Where(p => p.IdProntuario == idProntuario && p.VersaoAtual)
             .Include(p => p.Servico)
             .ToListAsync();
 
     public async Task<Planos?> BuscarPorIdAsync(int id)
         => await _contexto.Planos.Include(p => p.Servico).FirstOrDefaultAsync(p => p.Id == id);
+
+    public async Task<IEnumerable<Planos>> ListarCadeiaAsync(int id)
+    {
+        var plano = await _contexto.Planos.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
+        if (plano is null) return [];
+
+        var doProntuario = await _contexto.Planos
+            .AsNoTracking()
+            .Where(p => p.IdProntuario == plano.IdProntuario)
+            .Include(p => p.Servico)
+            .ToListAsync();
+
+        var porId = doProntuario.ToDictionary(p => p.Id);
+        var proximaVersao = doProntuario
+            .Where(p => p.PlanoAnteriorId is not null)
+            .ToLookup(p => p.PlanoAnteriorId!.Value);
+
+        // percorre a cadeia nas duas direções para o histórico sair igual
+        // independente de qual versão do plano foi informada
+        var cadeia = new List<Planos>();
+        var visitados = new HashSet<int>();
+
+        var anterior = porId[id];
+        while (anterior is not null && visitados.Add(anterior.Id))
+        {
+            cadeia.Add(anterior);
+            anterior = anterior.PlanoAnteriorId is int idAnterior ? porId.GetValueOrDefault(idAnterior) : null;
+        }
+
+        var posterior = proximaVersao[id].FirstOrDefault();
+        while (posterior is not null && visitados.Add(posterior.Id))
+        {
+            cadeia.Add(posterior);
+            posterior = proximaVersao[posterior.Id].FirstOrDefault();
+        }
+
+        return cadeia.OrderBy(p => p.DataAtualizacao).ThenBy(p => p.Id);
+    }
 
     public async Task AdicionarAsync(Planos plano)
     {
@@ -32,15 +73,14 @@ public class PlanosRepository : IPlanosRepository
         await _contexto.SaveChangesAsync();
     }
 
-    public async Task AtualizarAsync(Planos plano)
+    public async Task RegistrarNovaVersaoAsync(Planos planoAtual, Planos novaVersao)
     {
-        _contexto.Planos.Update(plano);
-        await _contexto.SaveChangesAsync();
-    }
+        await using var transacao = await _contexto.Database.BeginTransactionAsync();
 
-    public async Task RemoverAsync(Planos plano)
-    {
-        _contexto.Planos.Remove(plano);
+        planoAtual.VersaoAtual = false;
+        _contexto.Planos.Add(novaVersao);
         await _contexto.SaveChangesAsync();
+
+        await transacao.CommitAsync();
     }
 }
