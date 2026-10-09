@@ -1,4 +1,5 @@
 using DentusClinic.API.Data;
+using DentusClinic.API.Enums;
 using DentusClinic.API.Models;
 using DentusClinic.API.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +26,15 @@ public class ConsultaRepository : IConsultaRepository
             .Where(c => c.DataConsulta == DateOnly.FromDateTime(DateTime.Today) && c.Status != "Inativa")
             .Include(c => c.Dentista).Include(c => c.Paciente).Include(c => c.Servico)
             .OrderBy(c => c.HoraConsulta)
+            .ToListAsync();
+
+    public async Task<IEnumerable<Consulta>> ListarPendentesConfirmacaoAsync(DateOnly inicio, DateOnly fim)
+        => await _contexto.Consultas
+            .Where(c => c.DataConsulta >= inicio && c.DataConsulta <= fim
+                     && c.StatusConfirmacao == StatusConfirmacaoEnum.Pendente
+                     && c.Status != "Cancelada" && c.Status != "Inativa"
+                     && c.Status != "Encerrada" && c.Status != "Concluida")
+            .OrderBy(c => c.DataConsulta).ThenBy(c => c.HoraConsulta)
             .ToListAsync();
 
     public async Task<IEnumerable<Consulta>> ListarPorDentistaEDataAsync(int idDentista, DateOnly data)

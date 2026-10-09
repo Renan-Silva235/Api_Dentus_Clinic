@@ -31,6 +31,8 @@ x86/
 # Environment / Secrets
 .env
 secrets.json
+firebase/
+*-firebase-adminsdk-*.json
 
 # Logs
 *.log

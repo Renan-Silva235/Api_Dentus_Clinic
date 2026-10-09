@@ -8,6 +8,8 @@ using DentusClinic.API.Repositories.Interfaces;
 using DentusClinic.API.Services;
 using DentusClinic.API.Interfaces;
 using DentusClinic.API.Services.Interfaces;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -36,6 +38,8 @@ builder.Services.AddScoped<IAtendimentoRepository, AtendimentoRepository>();
 builder.Services.AddScoped<IProntuarioRepository, ProntuarioRepository>();
 builder.Services.AddScoped<IPlanosRepository, PlanosRepository>();
 builder.Services.AddScoped<IServicoRepository, ServicoRepository>();
+builder.Services.AddScoped<INotificacaoRepository, NotificacaoRepository>();
+builder.Services.AddScoped<IDispositivoRepository, DispositivoRepository>();
 
 // Services (injeção de dependência)
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -51,6 +55,27 @@ builder.Services.AddScoped<IProntuarioService, ProntuarioService>();
 builder.Services.AddScoped<IServicoService, ServicoService>();
 builder.Services.AddScoped<IPlanosService, PlanosService>();
 builder.Services.AddScoped<IPacienteAppService, PacienteAppService>();
+builder.Services.AddScoped<INotificacaoService, NotificacaoService>();
+
+// Push: usa o Firebase quando a credencial está configurada; sem ela a API
+// continua subindo e as notificações apenas vão para o log.
+var credencialFirebase = Environment.GetEnvironmentVariable("FIREBASE_CREDENTIALS_PATH");
+if (!string.IsNullOrWhiteSpace(credencialFirebase) && File.Exists(credencialFirebase))
+{
+    FirebaseApp.Create(new AppOptions
+    {
+        Credential = GoogleCredential.FromFile(credencialFirebase)
+    });
+    builder.Services.AddScoped<INotificadorPush, NotificadorPushFirebase>();
+}
+else
+{
+    Console.WriteLine("AVISO: FIREBASE_CREDENTIALS_PATH não configurado. As notificações irão apenas para o log.");
+    builder.Services.AddScoped<INotificadorPush, NotificadorPushLog>();
+}
+
+// Reenvio dos lembretes de consulta de hora em hora
+builder.Services.AddHostedService<NotificacaoJob>();
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
