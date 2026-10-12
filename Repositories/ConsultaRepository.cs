@@ -33,7 +33,7 @@ public class ConsultaRepository : IConsultaRepository
             .Where(c => c.DataConsulta >= inicio && c.DataConsulta <= fim
                      && c.StatusConfirmacao == StatusConfirmacaoEnum.Pendente
                      && c.Status != "Cancelada" && c.Status != "Inativa"
-                     && c.Status != "Encerrada" && c.Status != "Concluida")
+                     && c.Status != "Encerrada")
             .OrderBy(c => c.DataConsulta).ThenBy(c => c.HoraConsulta)
             .ToListAsync();
 

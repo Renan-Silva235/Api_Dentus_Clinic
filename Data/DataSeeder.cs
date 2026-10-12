@@ -1,4 +1,4 @@
-using DentusClinic.API.Enums;
+﻿using DentusClinic.API.Enums;
 using DentusClinic.API.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -184,25 +184,25 @@ public static class DataSeeder
                     new Consulta
                     {
                         DataConsulta = new DateOnly(2025, 5, 10), HoraConsulta = new TimeOnly(9, 0),
-                        Retorno = false, Status = "Concluida",
+                        Retorno = false, Status = "Encerrada",
                         IdDentista = dentistaCG.Id, IdPaciente = pLucas.Id, IdServico = svcLimpeza?.Id
                     },
                     new Consulta
                     {
                         DataConsulta = new DateOnly(2025, 5, 15), HoraConsulta = new TimeOnly(10, 30),
-                        Retorno = false, Status = "Concluida",
+                        Retorno = false, Status = "Encerrada",
                         IdDentista = dentistaOrto.Id, IdPaciente = pFernanda.Id, IdServico = svcOrtodontia?.Id
                     },
                     new Consulta
                     {
                         DataConsulta = new DateOnly(2025, 5, 20), HoraConsulta = new TimeOnly(14, 0),
-                        Retorno = false, Status = "Concluida",
+                        Retorno = false, Status = "Encerrada",
                         IdDentista = dentistaEndo.Id, IdPaciente = pRoberto.Id, IdServico = svcCanal?.Id
                     },
                     new Consulta
                     {
                         DataConsulta = new DateOnly(2025, 5, 22), HoraConsulta = new TimeOnly(8, 0),
-                        Retorno = true, Status = "Concluida",
+                        Retorno = true, Status = "Encerrada",
                         IdDentista = dentistaCG.Id, IdPaciente = pLucas.Id, IdServico = svcRestauracao?.Id
                     },
                     new Consulta
@@ -232,7 +232,7 @@ public static class DataSeeder
                     new Consulta
                     {
                         DataConsulta = DateOnly.FromDateTime(DateTime.Today), HoraConsulta = new TimeOnly(8, 30),
-                        Retorno = false, Status = "EmAtendimento",
+                        Retorno = false, Status = "Em Consulta",
                         IdDentista = dentistaCG.Id, IdPaciente = pRoberto.Id, IdServico = svcRotina?.Id
                     },
                     new Consulta
@@ -250,7 +250,7 @@ public static class DataSeeder
         if (!await context.Atendimentos.AnyAsync())
         {
             var consultasConcluidas = await context.Consultas
-                .Where(c => c.Status == "Concluida")
+                .Where(c => c.Status == "Encerrada")
                 .ToListAsync();
 
             if (consultasConcluidas.Count >= 4)
