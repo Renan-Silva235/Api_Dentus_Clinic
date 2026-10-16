@@ -351,11 +351,6 @@ namespace DentusClinic.API.Migrations
                     b.Property<DateOnly>("DataNascimento")
                         .HasColumnType("date");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
                     b.Property<string>("Endereco")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -376,9 +371,6 @@ namespace DentusClinic.API.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Cpf")
-                        .IsUnique();
-
-                    b.HasIndex("Email")
                         .IsUnique();
 
                     b.HasIndex("IdAcesso")
@@ -411,6 +403,9 @@ namespace DentusClinic.API.Migrations
                     b.Property<string>("Descricao")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("IdDentista")
+                        .HasColumnType("int");
+
                     b.Property<int>("IdProntuario")
                         .HasColumnType("int");
 
@@ -434,6 +429,8 @@ namespace DentusClinic.API.Migrations
                         .HasDefaultValue(true);
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IdDentista");
 
                     b.HasIndex("IdProntuario");
 
@@ -596,6 +593,11 @@ namespace DentusClinic.API.Migrations
 
             modelBuilder.Entity("DentusClinic.API.Models.Planos", b =>
                 {
+                    b.HasOne("DentusClinic.API.Models.Dentista", "Dentista")
+                        .WithMany()
+                        .HasForeignKey("IdDentista")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("DentusClinic.API.Models.Prontuario", "Prontuario")
                         .WithMany("Planos")
                         .HasForeignKey("IdProntuario")
@@ -611,6 +613,8 @@ namespace DentusClinic.API.Migrations
                         .WithMany()
                         .HasForeignKey("PlanoAnteriorId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Dentista");
 
                     b.Navigation("PlanoAnterior");
 

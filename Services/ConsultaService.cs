@@ -11,11 +11,19 @@ public class ConsultaService : IConsultaService
 {
     private readonly IConsultaRepository _consultaRepository;
     private readonly IPacienteRepository _pacienteRepository;
+    private readonly INotificacaoService _notificacaoService;
+    private readonly ILogger<ConsultaService> _registrador;
 
-    public ConsultaService(IConsultaRepository consultaRepository, IPacienteRepository pacienteRepository)
+    public ConsultaService(
+        IConsultaRepository consultaRepository,
+        IPacienteRepository pacienteRepository,
+        INotificacaoService notificacaoService,
+        ILogger<ConsultaService> registrador)
     {
         _consultaRepository = consultaRepository;
         _pacienteRepository = pacienteRepository;
+        _notificacaoService = notificacaoService;
+        _registrador = registrador;
     }
 
     public async Task<IEnumerable<ConsultaResponse>> ListarTodosAsync()
@@ -83,6 +91,18 @@ public class ConsultaService : IConsultaService
         };
 
         await _consultaRepository.AdicionarAsync(consulta);
+
+        // Consulta marcada já dentro das próximas 24h precisa ser avisada agora:
+        // esperar a próxima execução da rotina atrasaria o aviso sem motivo.
+        // Falhar ao notificar não pode impedir o agendamento.
+        try
+        {
+            await _notificacaoService.ProcessarLembretesAsync(CancellationToken.None);
+        }
+        catch (Exception excecao)
+        {
+            _registrador.LogError(excecao, "Consulta {IdConsulta} agendada, mas o aviso ao paciente falhou.", consulta.Id);
+        }
 
         var consultaSalva = await _consultaRepository.BuscarPorIdAsync(consulta.Id);
         return MapearResponse(consultaSalva!);
@@ -191,18 +211,19 @@ public class ConsultaService : IConsultaService
         await _consultaRepository.AtualizarAsync(consulta);
     }
 
-    // RN19: bloqueia ação em consulta cujo horário já passou.
-    // RN14: bloqueia ação a menos de 1h do horário agendado.
+    // RN19: bloqueia ação em consulta cujo horário já passou. Enquanto o
+    // horário não chega o paciente ainda está no prazo, mesmo que falte pouco.
     private static void ValidarPrazoDeAcao(Consulta consulta)
     {
-        var agora = DateTime.Now;
-        var horarioConsulta = consulta.DataConsulta.ToDateTime(consulta.HoraConsulta);
-
-        if (horarioConsulta < agora)
+        // Encerrada antes da hora também não aceita resposta: o atendimento
+        // já aconteceu, não há mais presença a confirmar.
+        if (consulta.Status is "Encerrada" or "Cancelada")
             throw new InvalidOperationException("Não é possível realizar ações em consultas já finalizadas.");
 
-        if (horarioConsulta - agora < TimeSpan.FromHours(1))
-            throw new InvalidOperationException("Prazo para confirmação expirado.");
+        var horarioConsulta = consulta.DataConsulta.ToDateTime(consulta.HoraConsulta);
+
+        if (horarioConsulta < DateTime.Now)
+            throw new InvalidOperationException("Não é possível realizar ações em consultas já finalizadas.");
     }
 
     private static ConsultaResponse MapearResponse(Consulta c) => new()

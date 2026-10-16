@@ -8,7 +8,6 @@ public interface IPacienteRepository
     Task<Paciente?> BuscarPorIdAsync(int id);
     Task<Paciente?> BuscarPorLoginIdAsync(int idLogin);
     Task<bool> ExisteCpfAsync(string cpf, int? idExcluido = null);
-    Task<bool> ExisteEmailAsync(string email, int? idExcluido = null);
     Task AdicionarAsync(Paciente paciente);
     Task AtualizarAsync(Paciente paciente);
     Task InativarAsync(Paciente paciente);

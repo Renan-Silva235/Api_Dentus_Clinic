@@ -84,8 +84,6 @@ public class AppDbContext : DbContext
             e.Property(x => x.Nome).IsRequired().HasMaxLength(150);
             e.Property(x => x.Cpf).IsRequired().HasMaxLength(14);
             e.HasIndex(x => x.Cpf).IsUnique();
-            e.Property(x => x.Email).IsRequired().HasMaxLength(150);
-            e.HasIndex(x => x.Email).IsUnique();
             e.HasOne(x => x.Login)
              .WithOne(x => x.Paciente)
              .HasForeignKey<Paciente>(x => x.IdAcesso)
@@ -190,6 +188,11 @@ public class AppDbContext : DbContext
             e.HasOne(x => x.Servico)
              .WithMany(x => x.Planos)
              .HasForeignKey(x => x.IdServico)
+             .IsRequired(false)
+             .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Dentista)
+             .WithMany()
+             .HasForeignKey(x => x.IdDentista)
              .IsRequired(false)
              .OnDelete(DeleteBehavior.Restrict);
             e.Property(x => x.VersaoAtual).HasDefaultValue(true);

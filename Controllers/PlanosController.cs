@@ -18,6 +18,16 @@ public class PlanosController : ControllerBase
         _planosService = planosService;
     }
 
+    /// O claim "Id" guarda o id da entidade autenticada; ele só é um dentista
+    /// quando o perfil é DENTISTA. Recepcionista e administrador registram
+    /// plano sem dentista vinculado.
+    private int? ObterIdDentistaAutenticado()
+    {
+        if (!User.IsInRole("DENTISTA")) return null;
+
+        return int.TryParse(User.FindFirst("Id")?.Value, out var id) ? id : null;
+    }
+
     [HttpGet]
     public async Task<IActionResult> ListarTodos()
     {
@@ -55,7 +65,7 @@ public class PlanosController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Cadastrar([FromBody] PlanosRequest request)
     {
-        var plano = await _planosService.CadastrarAsync(request);
+        var plano = await _planosService.CadastrarAsync(request, ObterIdDentistaAutenticado());
         return CreatedAtAction(nameof(BuscarPorId), new { id = plano.Id },
             ApiResponse<object>.Ok(plano, "Plano cadastrado com sucesso."));
     }
@@ -65,7 +75,7 @@ public class PlanosController : ControllerBase
     {
         try
         {
-            var plano = await _planosService.EditarAsync(id, request);
+            var plano = await _planosService.EditarAsync(id, request, ObterIdDentistaAutenticado());
             if (plano is null)
                 return NotFound(ApiResponse<object>.Erro("Plano não encontrado."));
 

@@ -6,11 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DentusClinic.API.Controllers;
 
-/// <summary>
-/// Endpoints do aplicativo mobile do paciente. RN13: o IdPaciente usado para
-/// buscar/alterar dados vem sempre das claims do token JWT, nunca de um
-/// parâmetro enviado pelo cliente.
-/// </summary>
 [ApiController]
 [Route("api/paciente-app")]
 [Authorize(Roles = "PACIENTE")]
@@ -74,6 +69,54 @@ public class PacienteAppController : ControllerBase
         {
             return BadRequest(ApiResponse<object>.Erro(ex.Message));
         }
+    }
+
+    [HttpGet("perfil")]
+    public async Task<IActionResult> Perfil()
+    {
+        var perfil = await _pacienteAppService.BuscarPerfilAsync(ObterIdPacienteAutenticado());
+        if (perfil is null)
+            return NotFound(ApiResponse<object>.Erro("Paciente não encontrado."));
+
+        return Ok(ApiResponse<object>.Ok(perfil));
+    }
+
+    [HttpPut("perfil")]
+    public async Task<IActionResult> AtualizarPerfil([FromBody] PacienteEditarRequest request)
+    {
+        var perfil = await _pacienteAppService.AtualizarPerfilAsync(ObterIdPacienteAutenticado(), request);
+        if (perfil is null)
+            return NotFound(ApiResponse<object>.Erro("Paciente não encontrado."));
+
+        return Ok(ApiResponse<object>.Ok(perfil, "Dados atualizados com sucesso."));
+    }
+
+    [HttpPost("alterar-senha")]
+    public async Task<IActionResult> AlterarSenha([FromBody] AlterarSenhaRequest request)
+    {
+        try
+        {
+            await _pacienteAppService.AlterarSenhaAsync(ObterIdPacienteAutenticado(), request);
+            return Ok(ApiResponse<object>.Ok("Senha alterada com sucesso."));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse<object>.Erro(ex.Message));
+        }
+    }
+
+    [HttpGet("tratamentos")]
+    public async Task<IActionResult> Tratamentos()
+    {
+        var tratamentos = await _pacienteAppService.ListarTratamentosAsync(ObterIdPacienteAutenticado());
+        return Ok(ApiResponse<object>.Ok(tratamentos));
+    }
+
+    [HttpPost("dispositivos")]
+    public async Task<IActionResult> RegistrarDispositivo([FromBody] DispositivoRequest request)
+    {
+        await _pacienteAppService.RegistrarDispositivoAsync(ObterIdPacienteAutenticado(), request);
+        return Ok(ApiResponse<object>.Ok("Dispositivo registrado com sucesso."));
     }
 
     [HttpPost("alterar-senha-inicial")]

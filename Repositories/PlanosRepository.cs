@@ -17,17 +17,17 @@ public class PlanosRepository : IPlanosRepository
     public async Task<IEnumerable<Planos>> ListarTodosAsync()
         => await _contexto.Planos
             .Where(p => p.VersaoAtual)
-            .Include(p => p.Servico)
+            .Include(p => p.Servico).Include(p => p.Dentista)
             .ToListAsync();
 
     public async Task<IEnumerable<Planos>> ListarPorProntuarioAsync(int idProntuario)
         => await _contexto.Planos
             .Where(p => p.IdProntuario == idProntuario && p.VersaoAtual)
-            .Include(p => p.Servico)
+            .Include(p => p.Servico).Include(p => p.Dentista)
             .ToListAsync();
 
     public async Task<Planos?> BuscarPorIdAsync(int id)
-        => await _contexto.Planos.Include(p => p.Servico).FirstOrDefaultAsync(p => p.Id == id);
+        => await _contexto.Planos.Include(p => p.Servico).Include(p => p.Dentista).FirstOrDefaultAsync(p => p.Id == id);
 
     public async Task<IEnumerable<Planos>> ListarCadeiaAsync(int id)
     {
@@ -37,7 +37,7 @@ public class PlanosRepository : IPlanosRepository
         var doProntuario = await _contexto.Planos
             .AsNoTracking()
             .Where(p => p.IdProntuario == plano.IdProntuario)
-            .Include(p => p.Servico)
+            .Include(p => p.Servico).Include(p => p.Dentista)
             .ToListAsync();
 
         var porId = doProntuario.ToDictionary(p => p.Id);

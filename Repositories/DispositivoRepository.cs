@@ -18,4 +18,19 @@ public class DispositivoRepository : IDispositivoRepository
         => await _contexto.Dispositivos
             .Where(d => d.IdPaciente == idPaciente && d.Ativo)
             .ToListAsync();
+
+    public async Task<Dispositivo?> BuscarPorTokenAsync(string tokenPush)
+        => await _contexto.Dispositivos.FirstOrDefaultAsync(d => d.TokenPush == tokenPush);
+
+    public async Task AdicionarAsync(Dispositivo dispositivo)
+    {
+        _contexto.Dispositivos.Add(dispositivo);
+        await _contexto.SaveChangesAsync();
+    }
+
+    public async Task AtualizarAsync(Dispositivo dispositivo)
+    {
+        _contexto.Dispositivos.Update(dispositivo);
+        await _contexto.SaveChangesAsync();
+    }
 }

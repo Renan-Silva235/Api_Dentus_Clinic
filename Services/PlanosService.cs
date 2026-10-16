@@ -41,12 +41,13 @@ public class PlanosService : IPlanosService
         return cadeia.Select(MapearResponse).ToList();
     }
 
-    public async Task<PlanosResponse> CadastrarAsync(PlanosRequest request)
+    public async Task<PlanosResponse> CadastrarAsync(PlanosRequest request, int? idDentista)
     {
         var plano = new Planos
         {
             IdProntuario = request.IdProntuario,
             IdServico = request.IdServico,
+            IdDentista = idDentista,
             Descricao = request.Descricao,
             Condicao = request.Condicao,
             Status = request.Status,
@@ -64,7 +65,7 @@ public class PlanosService : IPlanosService
 
     // Planos são append-only: editar significa registrar uma nova versão,
     // mantendo o registro anterior intacto para fins legais e de auditoria.
-    public async Task<PlanosResponse?> EditarAsync(int id, PlanosRequest request)
+    public async Task<PlanosResponse?> EditarAsync(int id, PlanosRequest request, int? idDentista)
     {
         var planoAtual = await _planosRepository.BuscarPorIdAsync(id);
         if (planoAtual is null) return null;
@@ -82,6 +83,9 @@ public class PlanosService : IPlanosService
             Status = request.Status,
             Observacao = request.Observacao,
             Dente = request.Dente,
+            // Cada versão guarda quem a registrou, e não quem registrou a
+            // anterior: é esse o dado que responde "quem escreveu isto".
+            IdDentista = idDentista,
             PlanoAnteriorId = planoAtual.Id,
             VersaoAtual = true,
             DataAtualizacao = DateOnly.FromDateTime(DateTime.Today)
@@ -107,6 +111,8 @@ public class PlanosService : IPlanosService
         Dente = p.Dente,
         DataCriacao = p.DataCriacao,
         DataAtualizacao = p.DataAtualizacao,
+        IdDentista = p.IdDentista,
+        NomeDentista = p.Dentista?.Nome,
         PlanoAnteriorId = p.PlanoAnteriorId,
         VersaoAtual = p.VersaoAtual
     };

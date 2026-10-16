@@ -11,9 +11,9 @@ public class NotificacaoService : INotificacaoService
 
     private static readonly TimeSpan AntecedenciaMaxima = TimeSpan.FromHours(24);
 
-    // Abaixo de 1h o paciente não pode mais confirmar nem recusar (mesma regra
-    // de ConsultaService.ValidarPrazoDeAcao), então lembrar não serviria de nada.
-    private static readonly TimeSpan AntecedenciaMinima = TimeSpan.FromHours(1);
+    // O paciente pode responder até o horário da consulta, então o lembrete
+    // vale até lá. Depois disso não há mais o que confirmar.
+    private static readonly TimeSpan AntecedenciaMinima = TimeSpan.Zero;
 
     private static readonly TimeSpan IntervaloEntreLembretes = TimeSpan.FromHours(1);
 
@@ -104,8 +104,25 @@ public class NotificacaoService : INotificacaoService
         var entregue = false;
         foreach (var dispositivo in dispositivos)
         {
-            if (await _notificadorPush.EnviarAsync(dispositivo, TipoConfirmacao, mensagem, cancellationToken))
+            var resultado = await _notificadorPush.EnviarAsync(dispositivo, TipoConfirmacao, mensagem, cancellationToken);
+
+            if (resultado == ResultadoEnvioPushEnum.Entregue)
+            {
                 entregue = true;
+                continue;
+            }
+
+            // Token sem conserto: desativar evita tentar entregar nele a cada
+            // hora, para sempre. O paciente volta a ter um ao abrir o aplicativo.
+            if (resultado == ResultadoEnvioPushEnum.TokenInvalido)
+            {
+                dispositivo.Ativo = false;
+                await _dispositivoRepository.AtualizarAsync(dispositivo);
+
+                _registrador.LogInformation(
+                    "Dispositivo {IdDispositivo} desativado: o Firebase não aceita mais o token dele.",
+                    dispositivo.Id);
+            }
         }
 
         return entregue;

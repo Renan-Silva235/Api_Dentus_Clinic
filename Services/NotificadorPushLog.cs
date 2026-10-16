@@ -1,3 +1,4 @@
+using DentusClinic.API.Enums;
 using DentusClinic.API.Models;
 using DentusClinic.API.Services.Interfaces;
 
@@ -15,12 +16,12 @@ public class NotificadorPushLog : INotificadorPush
         _registrador = registrador;
     }
 
-    public Task<bool> EnviarAsync(Dispositivo dispositivo, string titulo, string mensagem, CancellationToken cancellationToken)
+    public Task<ResultadoEnvioPushEnum> EnviarAsync(Dispositivo dispositivo, string titulo, string mensagem, CancellationToken cancellationToken)
     {
         _registrador.LogInformation(
             "PUSH para dispositivo {IdDispositivo} ({Plataforma}) | {Titulo}: {Mensagem}",
             dispositivo.Id, dispositivo.Plataforma, titulo, mensagem);
 
-        return Task.FromResult(true);
+        return Task.FromResult(ResultadoEnvioPushEnum.Entregue);
     }
 }

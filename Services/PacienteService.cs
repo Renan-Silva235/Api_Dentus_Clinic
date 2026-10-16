@@ -19,13 +19,18 @@ public class PacienteService : IPacienteService
 
     public async Task<IEnumerable<PacienteResponse>> ListarTodosAsync()
     {
-        var lista = await _context.Pacientes.Where(p => p.Ativo).ToListAsync();
+        var lista = await _context.Pacientes
+            .Where(p => p.Ativo)
+            .Include(p => p.Login)
+            .ToListAsync();
         return lista.Select(p => MapearResponse(p));
     }
 
     public async Task<PacienteResponse?> BuscarPorIdAsync(int id)
     {
-        var paciente = await _context.Pacientes.FindAsync(id);
+        var paciente = await _context.Pacientes
+            .Include(p => p.Login)
+            .FirstOrDefaultAsync(p => p.Id == id);
         return paciente is null ? null : MapearResponse(paciente);
     }
 
@@ -33,8 +38,6 @@ public class PacienteService : IPacienteService
     {
         if (await _context.Pacientes.AnyAsync(p => p.Cpf == request.Cpf))
             throw new InvalidOperationException("CPF já cadastrado no sistema.");
-        if (await _context.Pacientes.AnyAsync(p => p.Email == request.Email))
-            throw new InvalidOperationException("Email já cadastrado no sistema.");
         if (await _context.Logins.AnyAsync(l => l.Email == request.Email))
             throw new InvalidOperationException("Email já cadastrado no sistema.");
 
@@ -56,10 +59,10 @@ public class PacienteService : IPacienteService
             Nome = request.Nome,
             Cpf = request.Cpf,
             Telefone = request.Telefone,
-            Email = request.Email,
             DataNascimento = request.DataNascimento,
             Endereco = request.Endereco,
-            IdAcesso = login.Id
+            IdAcesso = login.Id,
+            Login = login
         };
 
         _context.Pacientes.Add(paciente);
@@ -81,14 +84,22 @@ public class PacienteService : IPacienteService
 
     public async Task<PacienteResponse?> EditarAsync(int id, PacienteEditarRequest request)
     {
-        var paciente = await _context.Pacientes.FindAsync(id);
+        var paciente = await _context.Pacientes
+            .Include(p => p.Login)
+            .FirstOrDefaultAsync(p => p.Id == id);
         if (paciente is null) return null;
 
+        // O e-mail é a credencial de acesso e mora em Logins: editá-lo aqui
+        // significa alterar o login do paciente.
         if (request.Email != null)
         {
-            if (await _context.Pacientes.AnyAsync(p => p.Email == request.Email && p.Id != id))
+            if (paciente.Login is null)
+                throw new InvalidOperationException("Paciente não possui login vinculado.");
+
+            if (await _context.Logins.AnyAsync(l => l.Email == request.Email && l.Id != paciente.Login.Id))
                 throw new InvalidOperationException("E-mail já cadastrado no sistema.");
-            paciente.Email = request.Email;
+
+            paciente.Login.Email = request.Email;
         }
 
         if (request.Nome != null)
@@ -123,7 +134,7 @@ public class PacienteService : IPacienteService
         Nome = p.Nome,
         Cpf = p.Cpf,
         Telefone = p.Telefone,
-        Email = p.Email,
+        Email = p.Login?.Email ?? string.Empty,
         DataNascimento = p.DataNascimento,
         Endereco = p.Endereco,
         SenhaTemporaria = senhaTemporaria

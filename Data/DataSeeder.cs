@@ -147,13 +147,26 @@ public static class DataSeeder
         };
         foreach (var (nome, cpf, tel, nasc, email, endereco) in pacientesMock)
         {
-            if (!await context.Pacientes.AnyAsync(p => p.Cpf == cpf))
-                context.Pacientes.Add(new Paciente
-                {
-                    Nome = nome, Cpf = cpf, Telefone = tel,
-                    DataNascimento = nasc, Email = email,
-                    Endereco = endereco, Ativo = true
-                });
+            if (await context.Pacientes.AnyAsync(p => p.Cpf == cpf)) continue;
+
+            // O e-mail do paciente fica em Logins, então todo paciente nasce
+            // com login, igual ao fluxo de cadastro da aplicação.
+            var login = new Login
+            {
+                Email = email,
+                Senha = BCrypt.Net.BCrypt.HashPassword("Paciente@123"),
+                TipoAcesso = TiposAcessoEnum.PACIENTE,
+                PrimeiroAcesso = true
+            };
+            context.Logins.Add(login);
+            await context.SaveChangesAsync();
+
+            context.Pacientes.Add(new Paciente
+            {
+                Nome = nome, Cpf = cpf, Telefone = tel,
+                DataNascimento = nasc, Endereco = endereco,
+                Ativo = true, IdAcesso = login.Id
+            });
         }
         await context.SaveChangesAsync();
 

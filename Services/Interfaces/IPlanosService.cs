@@ -9,6 +9,6 @@ public interface IPlanosService
     Task<IEnumerable<PlanosResponse>> ListarPorProntuarioAsync(int idProntuario);
     Task<PlanosResponse?> BuscarPorIdAsync(int id);
     Task<IEnumerable<PlanosResponse>> ListarHistoricoAsync(int id);
-    Task<PlanosResponse> CadastrarAsync(PlanosRequest request);
-    Task<PlanosResponse?> EditarAsync(int id, PlanosRequest request);
+    Task<PlanosResponse> CadastrarAsync(PlanosRequest request, int? idDentista);
+    Task<PlanosResponse?> EditarAsync(int id, PlanosRequest request, int? idDentista);
 }

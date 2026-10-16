@@ -50,9 +50,12 @@ public class ConsultaRepository : IConsultaRepository
         var hoje = DateOnly.FromDateTime(DateTime.Today);
         var horaAgora = TimeOnly.FromDateTime(DateTime.Now);
 
+        // Consulta encerrada sai daqui mesmo que o horário ainda não tenha
+        // chegado: o dentista pode finalizar antes da hora, e deixá-la na lista
+        // faria o paciente confirmar presença em consulta que já aconteceu.
         return await _contexto.Consultas
             .Where(c => c.IdPaciente == idPaciente
-                     && c.Status != "Cancelada" && c.Status != "Inativa"
+                     && c.Status != "Cancelada" && c.Status != "Inativa" && c.Status != "Encerrada"
                      && (c.DataConsulta > hoje || (c.DataConsulta == hoje && c.HoraConsulta >= horaAgora)))
             .Include(c => c.Dentista).Include(c => c.Paciente).Include(c => c.Servico)
             .OrderBy(c => c.DataConsulta).ThenBy(c => c.HoraConsulta)
@@ -64,10 +67,14 @@ public class ConsultaRepository : IConsultaRepository
         var hoje = DateOnly.FromDateTime(DateTime.Today);
         var horaAgora = TimeOnly.FromDateTime(DateTime.Now);
 
+        // Entram as que já passaram do horário e também as encerradas antes
+        // dele — senão uma consulta finalizada mais cedo sumiria das duas listas.
         return await _contexto.Consultas
             .Where(c => c.IdPaciente == idPaciente
                      && c.Status != "Inativa"
-                     && (c.DataConsulta < hoje || (c.DataConsulta == hoje && c.HoraConsulta < horaAgora)))
+                     && (c.Status == "Encerrada"
+                         || c.DataConsulta < hoje
+                         || (c.DataConsulta == hoje && c.HoraConsulta < horaAgora)))
             .Include(c => c.Dentista).Include(c => c.Paciente).Include(c => c.Servico)
             .OrderByDescending(c => c.DataConsulta).ThenByDescending(c => c.HoraConsulta)
             .ToListAsync();

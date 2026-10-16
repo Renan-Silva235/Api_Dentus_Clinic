@@ -23,6 +23,11 @@ public class Planos
 
     public DateOnly? DataAtualizacao { get; set; }
 
+    /// Dentista que registrou esta versão do plano. Nulo só nos registros
+    /// anteriores a este campo, em que não há como saber quem foi.
+    public int? IdDentista { get; set; }
+    public Dentista? Dentista { get; set; }
+
     public int? PlanoAnteriorId { get; set; }
     public Planos? PlanoAnterior { get; set; }
 

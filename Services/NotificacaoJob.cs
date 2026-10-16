@@ -2,11 +2,13 @@ using DentusClinic.API.Services.Interfaces;
 
 namespace DentusClinic.API.Services;
 
-/// Roda ao subir a API e depois de hora em hora: é o reenvio de hora em hora
-/// enquanto o paciente não responde que exige essa frequência.
+/// Roda ao subir a API e depois a cada poucos minutos, para que uma consulta
+/// recém-agendada dentro da janela de 24h seja avisada logo. O intervalo entre
+/// lembretes continua sendo de uma hora — quem controla isso é o
+/// NotificacaoService, por notificação, e não a frequência desta rotina.
 public class NotificacaoJob : BackgroundService
 {
-    private static readonly TimeSpan Intervalo = TimeSpan.FromHours(1);
+    private static readonly TimeSpan Intervalo = TimeSpan.FromMinutes(5);
 
     private readonly IServiceScopeFactory _fabricaDeEscopo;
     private readonly ILogger<NotificacaoJob> _registrador;
