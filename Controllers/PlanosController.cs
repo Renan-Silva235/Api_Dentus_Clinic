@@ -8,7 +8,9 @@ namespace DentusClinic.API.Controllers;
 
 [ApiController]
 [Route("api/planos")]
-[Authorize]
+// Prontuário é documento clínico: só o dentista acessa por aqui. O paciente vê
+// o próprio, e apenas o próprio, pelos endpoints de /api/paciente-app.
+[Authorize(Roles = "DENTISTA")]
 public class PlanosController : ControllerBase
 {
     private readonly IPlanosService _planosService;

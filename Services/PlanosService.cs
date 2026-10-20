@@ -41,7 +41,7 @@ public class PlanosService : IPlanosService
         return cadeia.Select(MapearResponse).ToList();
     }
 
-    public async Task<PlanosResponse> CadastrarAsync(PlanosRequest request, int? idDentista)
+    public async Task<PlanosResponse> CadastrarAsync(PlanosRequest request, int idDentista)
     {
         var plano = new Planos
         {
@@ -65,7 +65,7 @@ public class PlanosService : IPlanosService
 
     // Planos são append-only: editar significa registrar uma nova versão,
     // mantendo o registro anterior intacto para fins legais e de auditoria.
-    public async Task<PlanosResponse?> EditarAsync(int id, PlanosRequest request, int? idDentista)
+    public async Task<PlanosResponse?> EditarAsync(int id, PlanosRequest request, int idDentista)
     {
         var planoAtual = await _planosRepository.BuscarPorIdAsync(id);
         if (planoAtual is null) return null;
