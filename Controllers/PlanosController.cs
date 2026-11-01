@@ -20,15 +20,10 @@ public class PlanosController : ControllerBase
         _planosService = planosService;
     }
 
-    /// O claim "Id" guarda o id da entidade autenticada; ele só é um dentista
-    /// quando o perfil é DENTISTA. Recepcionista e administrador registram
-    /// plano sem dentista vinculado.
-    private int? ObterIdDentistaAutenticado()
-    {
-        if (!User.IsInRole("DENTISTA")) return null;
-
-        return int.TryParse(User.FindFirst("Id")?.Value, out var id) ? id : null;
-    }
+    /// O controller inteiro é restrito a DENTISTA, então o claim "Id" sempre
+    /// é o id do dentista autenticado.
+    private int ObterIdDentistaAutenticado()
+        => int.Parse(User.FindFirst("Id")!.Value);
 
     [HttpGet]
     public async Task<IActionResult> ListarTodos()

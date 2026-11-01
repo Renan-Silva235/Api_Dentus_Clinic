@@ -19,5 +19,6 @@ public class ConsultaRequest
     [Range(1, int.MaxValue, ErrorMessage = "Paciente é obrigatório.")]
     public int IdPaciente { get; set; }
 
-    public int? IdServico { get; set; }
+    [Range(1, int.MaxValue, ErrorMessage = "Serviço é obrigatório.")]
+    public int IdServico { get; set; }
 }

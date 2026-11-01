@@ -87,7 +87,7 @@ public class ConsultaService : IConsultaService
             Status = "Agendada",
             IdDentista = request.IdDentista,
             IdPaciente = request.IdPaciente,
-            IdServico = request.IdServico ?? null
+            IdServico = request.IdServico
         };
 
         await _consultaRepository.AdicionarAsync(consulta);
