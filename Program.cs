@@ -106,7 +106,13 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:5500", "http://localhost:5500")
+        // Libera localhost (dev) e qualquer subdominio *.vercel.app (producao e
+        // previews da Vercel, que usam subdominio aleatorio a cada commit).
+        policy.SetIsOriginAllowed(origin =>
+                  origin is "http://localhost:3000" or "http://localhost:5173"
+                      or "http://127.0.0.1:5500" or "http://localhost:5500"
+                  || Uri.TryCreate(origin, UriKind.Absolute, out var uri)
+                     && uri.Host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase))
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
