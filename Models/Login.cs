@@ -19,6 +19,9 @@ public class Login
     [Required]
     public TiposAcessoEnum TipoAcesso { get; set; }
 
+    public bool PrimeiroAcesso { get; set; } = true;
+
     public Funcionario? Funcionario { get; set; }
     public Dentista? Dentista { get; set; }
+    public Paciente? Paciente { get; set; }
 }

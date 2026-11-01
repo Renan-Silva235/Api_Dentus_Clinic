@@ -10,4 +10,10 @@ public class PacienteResponse
     public DateOnly DataNascimento { get; set; }
     public string Endereco { get; set; } = string.Empty;
     public bool Ativo { get; set; }
+
+    /// <summary>
+    /// Senha temporária em texto puro — preenchida só na resposta do cadastro (RN12),
+    /// pois depois disso só existe o hash. Null em todas as outras respostas.
+    /// </summary>
+    public string? SenhaTemporaria { get; set; }
 }

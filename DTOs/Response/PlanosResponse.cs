@@ -16,4 +16,11 @@ public class PlanosResponse
     public DateOnly DataCriacao { get; set; }
 
     public DateOnly? DataAtualizacao { get; set; }
+
+    public int? IdDentista { get; set; }
+    public string? NomeDentista { get; set; }
+
+    public int? PlanoAnteriorId { get; set; }
+
+    public bool VersaoAtual { get; set; }
 }

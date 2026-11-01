@@ -1,3 +1,4 @@
+using DentusClinic.API.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace DentusClinic.API.Models;
@@ -15,7 +16,10 @@ public class Consulta
     public bool Retorno { get; set; } = false;
 
     [Required]
-    public string Status { get; set; } = "Agendada"; // "Agendada", "Aguardando", "EmAtendimento", "Concluida", "Cancelada"
+    public string Status { get; set; } = "Agendada"; // "Agendada", "Aguardando", "Em Consulta", "Encerrada", "Cancelada", "Inativa"
+
+    [Required]
+    public StatusConfirmacaoEnum StatusConfirmacao { get; set; } = StatusConfirmacaoEnum.Pendente;
 
     public int IdDentista { get; set; }
     public Dentista Dentista { get; set; } = null!;

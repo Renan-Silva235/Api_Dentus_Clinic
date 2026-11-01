@@ -17,6 +17,9 @@ public class LoginRepository : ILoginRepository
     public async Task<Login?> BuscarPorEmailAsync(string email)
         => await _contexto.Logins.FirstOrDefaultAsync(l => l.Email == email);
 
+    public async Task<Login?> BuscarPorIdAsync(int id)
+        => await _contexto.Logins.FindAsync(id);
+
     public async Task<bool> ExisteEmailAsync(string email)
         => await _contexto.Logins.AnyAsync(l => l.Email == email);
 
@@ -25,6 +28,9 @@ public class LoginRepository : ILoginRepository
         _contexto.Logins.Add(login);
         await _contexto.SaveChangesAsync();
     }
+
+    public async Task AtualizarAsync(Login login)
+        => await _contexto.SaveChangesAsync();
 
     public async Task RemoverAsync(Login login)
     {

@@ -8,6 +8,8 @@ public interface IConsultaService
     Task<IEnumerable<ConsultaResponse>> ListarTodosAsync();
     Task<IEnumerable<ConsultaResponse>> ListarHojeAsync();
     Task<IEnumerable<ConsultaResponse>> ListarPorDentistaEDataAsync(int idDentista, DateOnly data);
+    Task<IEnumerable<ConsultaResponse>> ListarFuturasPorPacienteAsync(int idPaciente);
+    Task<IEnumerable<ConsultaResponse>> ListarHistoricoPorPacienteAsync(int idPaciente);
     Task<ConsultaResponse?> BuscarPorIdAsync(int id);
     Task<ConsultaResponse> AgendarAsync(ConsultaRequest request);
     Task<ConsultaResponse?> EditarAsync(int id, ConsultaUpdateRequest request);
@@ -15,4 +17,6 @@ public interface IConsultaService
     Task<bool> AtualizarStatusAsync(int id, string novoStatus);
     Task<bool> CancelarAsync(int id);
     Task<bool> InativarAsync(int id);
+    Task ConfirmarPresencaAsync(int idConsulta);
+    Task RecusarPresencaAsync(int idConsulta);
 }

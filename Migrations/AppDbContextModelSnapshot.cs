@@ -84,6 +84,11 @@ namespace DentusClinic.API.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<int>("StatusConfirmacao")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.HasKey("Id");
 
                     b.HasIndex("IdDentista");
@@ -92,7 +97,16 @@ namespace DentusClinic.API.Migrations
 
                     b.HasIndex("IdServico");
 
-                    b.ToTable("Consultas");
+                    b.ToTable("Consultas", t =>
+                        {
+                            t.HasTrigger("trg_CancelamentoAutomaticoRecusa");
+
+                            t.HasTrigger("trg_ImpedirAlteracaoConsultaRealizada");
+
+                            t.HasTrigger("trg_ImpedirConflitoHorarioDentista");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("DentusClinic.API.Models.Dentista", b =>
@@ -147,6 +161,41 @@ namespace DentusClinic.API.Migrations
                     b.ToTable("Dentistas");
                 });
 
+            modelBuilder.Entity("DentusClinic.API.Models.Dispositivo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Ativo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTime>("DataCadastro")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("IdPaciente")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Plataforma")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("TokenPush")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdPaciente");
+
+                    b.ToTable("Dispositivos");
+                });
+
             modelBuilder.Entity("DentusClinic.API.Models.Especialidade", b =>
                 {
                     b.Property<int>("Id")
@@ -161,6 +210,9 @@ namespace DentusClinic.API.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Nome")
+                        .IsUnique();
 
                     b.ToTable("Especialidades");
                 });
@@ -222,6 +274,11 @@ namespace DentusClinic.API.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
+                    b.Property<bool>("PrimeiroAcesso")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
                     b.Property<string>("Senha")
                         .IsRequired()
                         .HasMaxLength(60)
@@ -237,6 +294,42 @@ namespace DentusClinic.API.Migrations
                         .IsUnique();
 
                     b.ToTable("Logins");
+                });
+
+            modelBuilder.Entity("DentusClinic.API.Models.Notificacao", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("DataEnvio")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("IdConsulta")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StatusEnvio")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("Tentativas")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("TipoNotificacao")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdConsulta", "StatusEnvio");
+
+                    b.ToTable("Notificacoes");
                 });
 
             modelBuilder.Entity("DentusClinic.API.Models.Paciente", b =>
@@ -258,15 +351,13 @@ namespace DentusClinic.API.Migrations
                     b.Property<DateOnly>("DataNascimento")
                         .HasColumnType("date");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
                     b.Property<string>("Endereco")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("IdAcesso")
+                        .HasColumnType("int");
 
                     b.Property<string>("Nome")
                         .IsRequired()
@@ -282,8 +373,9 @@ namespace DentusClinic.API.Migrations
                     b.HasIndex("Cpf")
                         .IsUnique();
 
-                    b.HasIndex("Email")
-                        .IsUnique();
+                    b.HasIndex("IdAcesso")
+                        .IsUnique()
+                        .HasFilter("[IdAcesso] IS NOT NULL");
 
                     b.ToTable("Pacientes");
                 });
@@ -311,6 +403,9 @@ namespace DentusClinic.API.Migrations
                     b.Property<string>("Descricao")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("IdDentista")
+                        .HasColumnType("int");
+
                     b.Property<int>("IdProntuario")
                         .HasColumnType("int");
 
@@ -320,16 +415,28 @@ namespace DentusClinic.API.Migrations
                     b.Property<string>("Observacao")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("PlanoAnteriorId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<bool>("VersaoAtual")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("IdDentista");
 
                     b.HasIndex("IdProntuario");
 
                     b.HasIndex("IdServico");
+
+                    b.HasIndex("PlanoAnteriorId");
 
                     b.ToTable("Planos");
                 });
@@ -378,6 +485,9 @@ namespace DentusClinic.API.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("IdEspecialidade");
+
+                    b.HasIndex("Nome")
+                        .IsUnique();
 
                     b.ToTable("Servicos");
                 });
@@ -438,6 +548,17 @@ namespace DentusClinic.API.Migrations
                     b.Navigation("Login");
                 });
 
+            modelBuilder.Entity("DentusClinic.API.Models.Dispositivo", b =>
+                {
+                    b.HasOne("DentusClinic.API.Models.Paciente", "Paciente")
+                        .WithMany("Dispositivos")
+                        .HasForeignKey("IdPaciente")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Paciente");
+                });
+
             modelBuilder.Entity("DentusClinic.API.Models.Funcionario", b =>
                 {
                     b.HasOne("DentusClinic.API.Models.Login", "Login")
@@ -449,8 +570,34 @@ namespace DentusClinic.API.Migrations
                     b.Navigation("Login");
                 });
 
+            modelBuilder.Entity("DentusClinic.API.Models.Notificacao", b =>
+                {
+                    b.HasOne("DentusClinic.API.Models.Consulta", "Consulta")
+                        .WithMany()
+                        .HasForeignKey("IdConsulta")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Consulta");
+                });
+
+            modelBuilder.Entity("DentusClinic.API.Models.Paciente", b =>
+                {
+                    b.HasOne("DentusClinic.API.Models.Login", "Login")
+                        .WithOne("Paciente")
+                        .HasForeignKey("DentusClinic.API.Models.Paciente", "IdAcesso")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Login");
+                });
+
             modelBuilder.Entity("DentusClinic.API.Models.Planos", b =>
                 {
+                    b.HasOne("DentusClinic.API.Models.Dentista", "Dentista")
+                        .WithMany()
+                        .HasForeignKey("IdDentista")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("DentusClinic.API.Models.Prontuario", "Prontuario")
                         .WithMany("Planos")
                         .HasForeignKey("IdProntuario")
@@ -461,6 +608,15 @@ namespace DentusClinic.API.Migrations
                         .WithMany("Planos")
                         .HasForeignKey("IdServico")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DentusClinic.API.Models.Planos", "PlanoAnterior")
+                        .WithMany()
+                        .HasForeignKey("PlanoAnteriorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Dentista");
+
+                    b.Navigation("PlanoAnterior");
 
                     b.Navigation("Prontuario");
 
@@ -508,11 +664,15 @@ namespace DentusClinic.API.Migrations
                     b.Navigation("Dentista");
 
                     b.Navigation("Funcionario");
+
+                    b.Navigation("Paciente");
                 });
 
             modelBuilder.Entity("DentusClinic.API.Models.Paciente", b =>
                 {
                     b.Navigation("Consultas");
+
+                    b.Navigation("Dispositivos");
 
                     b.Navigation("Prontuario");
                 });

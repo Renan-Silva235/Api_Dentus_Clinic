@@ -7,6 +7,7 @@ public class ConsultaResponse
     public TimeOnly HoraConsulta { get; set; }
     public bool Retorno { get; set; }
     public string Status { get; set; } = string.Empty;
+    public string StatusConfirmacao { get; set; } = string.Empty;
     public int IdDentista { get; set; }
     public int IdPaciente { get; set; }
     public int? IdServico { get; set; }

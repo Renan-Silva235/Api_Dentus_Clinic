@@ -132,4 +132,36 @@ public class ConsultaController : ControllerBase
 
         return Ok(ApiResponse<object>.Ok("Consulta inativada com sucesso."));
     }
+
+    // RN17: confirmação/recusa também disponível para o funcionário, reaproveitando a
+    // mesma lógica de negócio (prazo, cancelamento automático) usada pelo app do paciente.
+    [HttpPost("{id}/confirmar")]
+    [Authorize(Roles = "DENTISTA,SECRETARIA")]
+    public async Task<IActionResult> ConfirmarPresenca(int id)
+    {
+        try
+        {
+            await _consultaService.ConfirmarPresencaAsync(id);
+            return Ok(ApiResponse<object>.Ok("Presença confirmada com sucesso."));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse<object>.Erro(ex.Message));
+        }
+    }
+
+    [HttpPost("{id}/recusar")]
+    [Authorize(Roles = "DENTISTA,SECRETARIA")]
+    public async Task<IActionResult> RecusarPresenca(int id)
+    {
+        try
+        {
+            await _consultaService.RecusarPresencaAsync(id);
+            return Ok(ApiResponse<object>.Ok("Presença recusada; consulta cancelada."));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse<object>.Erro(ex.Message));
+        }
+    }
 }

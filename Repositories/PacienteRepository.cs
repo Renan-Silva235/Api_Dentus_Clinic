@@ -20,11 +20,11 @@ public class PacienteRepository : IPacienteRepository
     public async Task<Paciente?> BuscarPorIdAsync(int id)
         => await _contexto.Pacientes.FindAsync(id);
 
+    public async Task<Paciente?> BuscarPorLoginIdAsync(int idLogin)
+        => await _contexto.Pacientes.FirstOrDefaultAsync(p => p.IdAcesso == idLogin);
+
     public async Task<bool> ExisteCpfAsync(string cpf, int? idExcluido = null)
         => await _contexto.Pacientes.AnyAsync(p => p.Cpf == cpf && (idExcluido == null || p.Id != idExcluido));
-
-    public async Task<bool> ExisteEmailAsync(string email, int? idExcluido = null)
-        => await _contexto.Pacientes.AnyAsync(p => p.Email == email && (idExcluido == null || p.Id != idExcluido));
 
     public async Task AdicionarAsync(Paciente paciente)
     {

@@ -8,7 +8,9 @@ namespace DentusClinic.API.Controllers;
 
 [ApiController]
 [Route("api/planos")]
-[Authorize]
+// Prontuário é documento clínico: só o dentista acessa por aqui. O paciente vê
+// o próprio, e apenas o próprio, pelos endpoints de /api/paciente-app.
+[Authorize(Roles = "DENTISTA")]
 public class PlanosController : ControllerBase
 {
     private readonly IPlanosService _planosService;
@@ -17,6 +19,11 @@ public class PlanosController : ControllerBase
     {
         _planosService = planosService;
     }
+
+    /// O controller inteiro é restrito a DENTISTA, então o claim "Id" sempre
+    /// é o id do dentista autenticado.
+    private int ObterIdDentistaAutenticado()
+        => int.Parse(User.FindFirst("Id")!.Value);
 
     [HttpGet]
     public async Task<IActionResult> ListarTodos()
@@ -42,10 +49,20 @@ public class PlanosController : ControllerBase
         return Ok(ApiResponse<object>.Ok(plano));
     }
 
+    [HttpGet("{id}/historico")]
+    public async Task<IActionResult> ListarHistorico(int id)
+    {
+        var historico = await _planosService.ListarHistoricoAsync(id);
+        if (!historico.Any())
+            return NotFound(ApiResponse<object>.Erro("Plano não encontrado."));
+
+        return Ok(ApiResponse<object>.Ok(historico));
+    }
+
     [HttpPost]
     public async Task<IActionResult> Cadastrar([FromBody] PlanosRequest request)
     {
-        var plano = await _planosService.CadastrarAsync(request);
+        var plano = await _planosService.CadastrarAsync(request, ObterIdDentistaAutenticado());
         return CreatedAtAction(nameof(BuscarPorId), new { id = plano.Id },
             ApiResponse<object>.Ok(plano, "Plano cadastrado com sucesso."));
     }
@@ -53,21 +70,17 @@ public class PlanosController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Editar(int id, [FromBody] PlanosRequest request)
     {
-        var plano = await _planosService.EditarAsync(id, request);
-        if (plano is null)
-            return NotFound(ApiResponse<object>.Erro("Plano não encontrado."));
+        try
+        {
+            var plano = await _planosService.EditarAsync(id, request, ObterIdDentistaAutenticado());
+            if (plano is null)
+                return NotFound(ApiResponse<object>.Erro("Plano não encontrado."));
 
-        return Ok(ApiResponse<object>.Ok(plano, "Plano atualizado com sucesso."));
-    }
-
-    [HttpDelete("{id}")]
-    [Authorize(Roles = "ADMINISTRADOR")]
-    public async Task<IActionResult> Remover(int id)
-    {
-        var removido = await _planosService.RemoverAsync(id);
-        if (!removido)
-            return NotFound(ApiResponse<object>.Erro("Plano não encontrado."));
-
-        return Ok(ApiResponse<object>.Ok("Plano removido com sucesso."));
+            return Ok(ApiResponse<object>.Ok(plano, "Nova versão do plano registrada com sucesso."));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse<object>.Erro(ex.Message));
+        }
     }
 }

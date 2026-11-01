@@ -15,17 +15,20 @@ public class AuthService : IAuthService
     private readonly ILoginRepository _loginRepository;
     private readonly IFuncionarioRepository _funcionarioRepository;
     private readonly IDentistaRepository _dentistaRepository;
+    private readonly IPacienteRepository _pacienteRepository;
     private readonly IConfiguration _configuracao;
 
     public AuthService(
         ILoginRepository loginRepository,
         IFuncionarioRepository funcionarioRepository,
         IDentistaRepository dentistaRepository,
+        IPacienteRepository pacienteRepository,
         IConfiguration configuracao)
     {
         _loginRepository = loginRepository;
         _funcionarioRepository = funcionarioRepository;
         _dentistaRepository = dentistaRepository;
+        _pacienteRepository = pacienteRepository;
         _configuracao = configuracao;
     }
 
@@ -51,9 +54,17 @@ public class AuthService : IAuthService
             var dentista = await _dentistaRepository.BuscarPorLoginIdAsync(login.Id);
             if (dentista is not null) { nome = dentista.Nome; entidadeId = dentista.Id; }
         }
+        else if (login.TipoAcesso == TiposAcessoEnum.PACIENTE)
+        {
+            var paciente = await _pacienteRepository.BuscarPorLoginIdAsync(login.Id);
+            if (paciente is not null) { nome = paciente.Nome; entidadeId = paciente.Id; }
+        }
 
+        // O claim "Id" carrega o Id da entidade (Funcionario/Dentista/Paciente), não o Id
+        // do Login — é o que os endpoints usam para identificar "o usuário autenticado"
+        // (ex.: RN13, onde o IdPaciente de um endpoint do app mobile vem sempre do token).
         var token = GerarToken(
-            (int)login.Id,
+            entidadeId,
             nome,
             login.TipoAcesso.ToString()
         );
@@ -66,6 +77,7 @@ public class AuthService : IAuthService
             Token = token,
             TipoAcesso = login.TipoAcesso.ToString(),
             Nome = nome,
+            PrimeiroAcesso = login.PrimeiroAcesso,
             Expiracao = DateTime.UtcNow.AddHours(expiracaoHoras)
         };
     }

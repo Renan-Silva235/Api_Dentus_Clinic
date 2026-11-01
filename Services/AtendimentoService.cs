@@ -47,7 +47,7 @@ public class AtendimentoService : IAtendimentoService
             Observacao = request.Observacao
         };
 
-        consulta.Status = "Concluida";
+        consulta.Status = "Encerrada";
         await _consultaRepository.AtualizarAsync(consulta);
 
         await _atendimentoRepository.AdicionarAsync(atendimento);
