@@ -4,6 +4,7 @@ using DentusClinic.API.Enums;
 using DentusClinic.API.Models;
 using DentusClinic.API.Repositories.Interfaces;
 using DentusClinic.API.Services.Interfaces;
+using DentusClinic.API.Utils;
 
 namespace DentusClinic.API.Services;
 
@@ -64,8 +65,9 @@ public class ConsultaService : IConsultaService
 
     public async Task<ConsultaResponse> AgendarAsync(ConsultaRequest request)
     {
-        var hoje = DateOnly.FromDateTime(DateTime.Today);
-        var horaAgora = TimeOnly.FromDateTime(DateTime.Now);
+        var agora = HorarioBrasil.Agora();
+        var hoje = DateOnly.FromDateTime(agora);
+        var horaAgora = TimeOnly.FromDateTime(agora);
 
         if (request.DataConsulta < hoje)
             throw new InvalidOperationException("Não é possível agendar uma consulta em uma data passada.");
@@ -117,8 +119,9 @@ public class ConsultaService : IConsultaService
         var data = request.DataConsulta ?? consulta.DataConsulta;
         var hora = request.HoraConsulta ?? consulta.HoraConsulta;
 
-        var hoje = DateOnly.FromDateTime(DateTime.Today);
-        var horaAgora = TimeOnly.FromDateTime(DateTime.Now);
+        var agora = HorarioBrasil.Agora();
+        var hoje = DateOnly.FromDateTime(agora);
+        var horaAgora = TimeOnly.FromDateTime(agora);
 
         if (request.DataConsulta is not null && request.DataConsulta.Value < hoje)
             throw new InvalidOperationException("Não é possível alterar uma consulta para uma data passada.");
@@ -222,7 +225,7 @@ public class ConsultaService : IConsultaService
 
         var horarioConsulta = consulta.DataConsulta.ToDateTime(consulta.HoraConsulta);
 
-        if (horarioConsulta < DateTime.Now)
+        if (horarioConsulta < HorarioBrasil.Agora())
             throw new InvalidOperationException("Não é possível realizar ações em consultas já finalizadas.");
     }
 
