@@ -2,6 +2,7 @@ using DentusClinic.API.Enums;
 using DentusClinic.API.Models;
 using DentusClinic.API.Repositories.Interfaces;
 using DentusClinic.API.Services.Interfaces;
+using DentusClinic.API.Utils;
 
 namespace DentusClinic.API.Services;
 
@@ -39,7 +40,7 @@ public class NotificacaoService : INotificacaoService
 
     public async Task<int> ProcessarLembretesAsync(CancellationToken cancellationToken)
     {
-        var agora = DateTime.Now;
+        var agora = HorarioBrasil.Agora();
         var janelaInicio = agora + AntecedenciaMinima;
         var janelaFim = agora + AntecedenciaMaxima;
 
