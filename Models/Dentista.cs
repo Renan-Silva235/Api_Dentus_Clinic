@@ -18,5 +18,7 @@ public class Dentista : Usuario
     public int IdAcesso { get; set; }
     public Login Login { get; set; } = null!;
 
+    public bool Ativo { get; set; } = true;
+
     public ICollection<Consulta> Consultas { get; set; } = new List<Consulta>();
 }

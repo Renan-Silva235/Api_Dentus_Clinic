@@ -15,4 +15,6 @@ public class Funcionario : Usuario
     [ForeignKey(nameof(Login))]
     public int IdAcesso { get; set; }
     public Login Login { get; set; } = null!;
+
+    public bool Ativo { get; set; } = true;
 }

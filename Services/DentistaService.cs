@@ -18,6 +18,7 @@ public class DentistaService : IDentistaService {
     public async Task<IEnumerable<DentistaResponse>> ListarTodosAsync()
     {
         var lista = await _context.Dentistas
+            .Where(d => d.Ativo)
             .Include(d => d.Especialidade)
             .Include(d => d.Login)
             .ToListAsync();
@@ -99,15 +100,17 @@ public class DentistaService : IDentistaService {
         return MapearResponse(dentista);
     }
 
+    // Inativação, não exclusão: o dentista costuma ter consultas e planos de
+    // tratamento vinculados (FK com ON DELETE RESTRICT), então excluir de
+    // verdade falhava sempre que ele já tinha algum atendimento registrado.
+    // O login continua existindo, mas o acesso é bloqueado em
+    // AuthService.LoginAsync a partir da flag Ativo.
     public async Task<bool> RemoverAsync(int id)  // ← long
     {
-        var dentista = await _context.Dentistas
-            .Include(d => d.Login)
-            .FirstOrDefaultAsync(d => d.Id == id);
-        if (dentista is null) return false;
+        var dentista = await _context.Dentistas.FindAsync(id);
+        if (dentista is null || !dentista.Ativo) return false;
 
-        _context.Dentistas.Remove(dentista);
-        _context.Logins.Remove(dentista.Login);
+        dentista.Ativo = false;
         await _context.SaveChangesAsync();
         return true;
     }
@@ -120,6 +123,7 @@ public class DentistaService : IDentistaService {
         Telefone = d.Telefone,
         IdEspecialidade = d.IdEspecialidade,
         NomeEspecialidade = d.Especialidade?.Nome ?? string.Empty,
-        Email = d.Login?.Email ?? string.Empty
+        Email = d.Login?.Email ?? string.Empty,
+        Ativo = d.Ativo
     };
 }

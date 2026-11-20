@@ -74,6 +74,6 @@ public class FuncionarioController : ControllerBase
         if (!removido)
             return NotFound(ApiResponse<object>.Erro("Funcionário não encontrado."));
 
-        return Ok(ApiResponse<object>.Ok("Funcionário removido com sucesso."));
+        return Ok(ApiResponse<object>.Ok("Funcionário inativado com sucesso."));
     }
 }

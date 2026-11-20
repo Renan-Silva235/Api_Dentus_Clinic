@@ -52,6 +52,7 @@ public class AppDbContext : DbContext
             e.Property(x => x.Cpf).IsRequired().HasMaxLength(14);
             e.HasIndex(x => x.Cpf).IsUnique();
             e.Property(x => x.Cargo).IsRequired().HasMaxLength(20);
+            e.Property(x => x.Ativo).HasDefaultValue(true);
             e.HasOne(x => x.Login)
              .WithOne(x => x.Funcionario)
              .HasForeignKey<Funcionario>(x => x.IdAcesso)
@@ -67,6 +68,7 @@ public class AppDbContext : DbContext
             e.HasIndex(x => x.Cpf).IsUnique();
             e.Property(x => x.Cro).IsRequired().HasMaxLength(20);
             e.HasIndex(x => x.Cro).IsUnique();
+            e.Property(x => x.Ativo).HasDefaultValue(true);
             e.HasOne(x => x.Especialidade)
              .WithMany(x => x.Dentistas)
              .HasForeignKey(x => x.IdEspecialidade)

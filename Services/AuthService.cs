@@ -42,22 +42,27 @@ public class AuthService : IAuthService
         string nome = login.Email; // fallback
         int entidadeId = 0;
 
-        // Busca o nome e ID da entidade conforme o tipo de acesso
+        // Busca o nome e ID da entidade conforme o tipo de acesso. Funcionário/
+        // dentista/paciente inativado não consegue mais logar, mesmo com a senha
+        // certa — a conta continua existindo só para não perder o histórico dele.
         if (login.TipoAcesso == TiposAcessoEnum.ADMINISTRADOR ||
             login.TipoAcesso == TiposAcessoEnum.SECRETARIA)
         {
             var funcionario = await _funcionarioRepository.BuscarPorLoginIdAsync(login.Id);
-            if (funcionario is not null) { nome = funcionario.Nome; entidadeId = funcionario.Id; }
+            if (funcionario is null || !funcionario.Ativo) return null;
+            nome = funcionario.Nome; entidadeId = funcionario.Id;
         }
         else if (login.TipoAcesso == TiposAcessoEnum.DENTISTA)
         {
             var dentista = await _dentistaRepository.BuscarPorLoginIdAsync(login.Id);
-            if (dentista is not null) { nome = dentista.Nome; entidadeId = dentista.Id; }
+            if (dentista is null || !dentista.Ativo) return null;
+            nome = dentista.Nome; entidadeId = dentista.Id;
         }
         else if (login.TipoAcesso == TiposAcessoEnum.PACIENTE)
         {
             var paciente = await _pacienteRepository.BuscarPorLoginIdAsync(login.Id);
-            if (paciente is not null) { nome = paciente.Nome; entidadeId = paciente.Id; }
+            if (paciente is null || !paciente.Ativo) return null;
+            nome = paciente.Nome; entidadeId = paciente.Id;
         }
 
         // O claim "Id" carrega o Id da entidade (Funcionario/Dentista/Paciente), não o Id
