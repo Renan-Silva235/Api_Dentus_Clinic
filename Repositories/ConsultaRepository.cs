@@ -2,6 +2,7 @@ using DentusClinic.API.Data;
 using DentusClinic.API.Enums;
 using DentusClinic.API.Models;
 using DentusClinic.API.Repositories.Interfaces;
+using DentusClinic.API.Utils;
 using Microsoft.EntityFrameworkCore;
 
 namespace DentusClinic.API.Repositories;
@@ -23,7 +24,7 @@ public class ConsultaRepository : IConsultaRepository
 
     public async Task<IEnumerable<Consulta>> ListarHojeAsync()
         => await _contexto.Consultas
-            .Where(c => c.DataConsulta == DateOnly.FromDateTime(DateTime.Today) && c.Status != "Inativa")
+            .Where(c => c.DataConsulta == DateOnly.FromDateTime(HorarioBrasil.Agora()) && c.Status != "Inativa")
             .Include(c => c.Dentista).Include(c => c.Paciente).Include(c => c.Servico)
             .OrderBy(c => c.HoraConsulta)
             .ToListAsync();
@@ -47,8 +48,9 @@ public class ConsultaRepository : IConsultaRepository
 
     public async Task<IEnumerable<Consulta>> ListarFuturasPorPacienteAsync(int idPaciente)
     {
-        var hoje = DateOnly.FromDateTime(DateTime.Today);
-        var horaAgora = TimeOnly.FromDateTime(DateTime.Now);
+        var agora = HorarioBrasil.Agora();
+        var hoje = DateOnly.FromDateTime(agora);
+        var horaAgora = TimeOnly.FromDateTime(agora);
 
         // Consulta encerrada sai daqui mesmo que o horário ainda não tenha
         // chegado: o dentista pode finalizar antes da hora, e deixá-la na lista
@@ -64,8 +66,9 @@ public class ConsultaRepository : IConsultaRepository
 
     public async Task<IEnumerable<Consulta>> ListarHistoricoPorPacienteAsync(int idPaciente)
     {
-        var hoje = DateOnly.FromDateTime(DateTime.Today);
-        var horaAgora = TimeOnly.FromDateTime(DateTime.Now);
+        var agora = HorarioBrasil.Agora();
+        var hoje = DateOnly.FromDateTime(agora);
+        var horaAgora = TimeOnly.FromDateTime(agora);
 
         // Entram as que já passaram do horário e também as encerradas antes
         // dele — senão uma consulta finalizada mais cedo sumiria das duas listas.
