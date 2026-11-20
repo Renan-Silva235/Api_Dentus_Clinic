@@ -77,6 +77,6 @@ public class DentistaController : ControllerBase
         if (!removido)
             return NotFound(ApiResponse<object>.Erro("Dentista não encontrado."));
 
-        return Ok(ApiResponse<object>.Ok("Dentista removido com sucesso."));
+        return Ok(ApiResponse<object>.Ok("Dentista inativado com sucesso."));
     }
 }

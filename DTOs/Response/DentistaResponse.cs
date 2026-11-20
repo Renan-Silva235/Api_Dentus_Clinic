@@ -10,4 +10,5 @@ public class DentistaResponse
     public int IdEspecialidade { get; set; }
     public string NomeEspecialidade { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+    public bool Ativo { get; set; }
 }

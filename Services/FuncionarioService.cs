@@ -18,6 +18,7 @@ public class FuncionarioService : IFuncionarioService {
     public async Task<IEnumerable<FuncionarioResponse>> ListarTodosAsync()
     {
         var lista = await _context.Funcionarios
+            .Where(f => f.Ativo)
             .Include(f => f.Login)
             .ToListAsync();
         return lista.Select(MapearResponse);
@@ -103,15 +104,16 @@ public class FuncionarioService : IFuncionarioService {
         return MapearResponse(funcionario);
     }
 
+    // Inativação, não exclusão: o funcionário pode ter vínculo com registros
+    // que não podem (e não devem) ser apagados, como consultas e prontuários
+    // de pacientes. O login continua existindo, mas o acesso é bloqueado em
+    // AuthService.LoginAsync a partir da flag Ativo.
     public async Task<bool> RemoverAsync(int id)  // ← long
     {
-        var funcionario = await _context.Funcionarios
-            .Include(f => f.Login)
-            .FirstOrDefaultAsync(f => f.Id == id);
-        if (funcionario is null) return false;
+        var funcionario = await _context.Funcionarios.FindAsync(id);
+        if (funcionario is null || !funcionario.Ativo) return false;
 
-        _context.Funcionarios.Remove(funcionario);
-        _context.Logins.Remove(funcionario.Login);
+        funcionario.Ativo = false;
         await _context.SaveChangesAsync();
         return true;
     }
@@ -123,6 +125,7 @@ public class FuncionarioService : IFuncionarioService {
         DataNascimento = f.DataNascimento,
         Telefone = f.Telefone,
         Cargo = f.Cargo,
-        Email = f.Login?.Email ?? string.Empty
+        Email = f.Login?.Email ?? string.Empty,
+        Ativo = f.Ativo
     };
 }
