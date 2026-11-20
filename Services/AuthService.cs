@@ -48,9 +48,15 @@ public class AuthService : IAuthService
         if (login.TipoAcesso == TiposAcessoEnum.ADMINISTRADOR ||
             login.TipoAcesso == TiposAcessoEnum.SECRETARIA)
         {
+            // Um ADMINISTRADOR pode ser só um Login, sem Funcionario vinculado
+            // (é o caso do admin padrão do sistema) - nesse caso não há o que
+            // checar e o login segue normalmente, como sempre funcionou.
             var funcionario = await _funcionarioRepository.BuscarPorLoginIdAsync(login.Id);
-            if (funcionario is null || !funcionario.Ativo) return null;
-            nome = funcionario.Nome; entidadeId = funcionario.Id;
+            if (funcionario is not null)
+            {
+                if (!funcionario.Ativo) return null;
+                nome = funcionario.Nome; entidadeId = funcionario.Id;
+            }
         }
         else if (login.TipoAcesso == TiposAcessoEnum.DENTISTA)
         {
