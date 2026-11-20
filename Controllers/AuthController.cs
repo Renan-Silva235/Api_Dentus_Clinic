@@ -25,4 +25,31 @@ public class AuthController : ControllerBase
 
         return Ok(ApiResponse<object>.Ok(resultado, "Login realizado com sucesso."));
     }
+
+    // Primeiro passo do "esqueci minha senha": só confirma que o e-mail existe,
+    // antes do app pedir a nova senha.
+    [HttpPost("esqueci-senha/verificar")]
+    public async Task<IActionResult> VerificarEmailEsqueciSenha([FromBody] EsqueciSenhaVerificarRequest request)
+    {
+        if (!await _authService.EmailExisteAsync(request.Email))
+            return NotFound(ApiResponse<object>.Erro("E-mail não encontrado."));
+
+        return Ok(ApiResponse<object>.Ok("E-mail encontrado."));
+    }
+
+    // Segundo passo: troca a senha direto a partir do e-mail, sem confirmação
+    // adicional (sem envio de e-mail/token nesse fluxo).
+    [HttpPost("esqueci-senha/redefinir")]
+    public async Task<IActionResult> RedefinirSenhaEsquecida([FromBody] EsqueciSenhaRedefinirRequest request)
+    {
+        try
+        {
+            await _authService.RedefinirSenhaAsync(request.Email, request.NovaSenha);
+            return Ok(ApiResponse<object>.Ok("Senha redefinida com sucesso."));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse<object>.Erro(ex.Message));
+        }
+    }
 }

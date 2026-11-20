@@ -93,6 +93,22 @@ public class AuthService : IAuthService
         };
     }
 
+    public async Task<bool> EmailExisteAsync(string email)
+        => await _loginRepository.ExisteEmailAsync(email);
+
+    // Fluxo de "esqueci minha senha": sem confirmação por e-mail/token, troca a
+    // senha direto a partir do e-mail informado (o app já checou antes que o
+    // e-mail existe, via EmailExisteAsync).
+    public async Task RedefinirSenhaAsync(string email, string novaSenha)
+    {
+        var login = await _loginRepository.BuscarPorEmailAsync(email)
+            ?? throw new InvalidOperationException("E-mail não encontrado.");
+
+        login.Senha = BCrypt.Net.BCrypt.HashPassword(novaSenha);
+        login.PrimeiroAcesso = false;
+        await _loginRepository.AtualizarAsync(login);
+    }
+
     private string GerarToken(int id, string nome, string tipoAcesso)
     {
         var chaveSecreta = Environment.GetEnvironmentVariable("JWT_SECRET_KEY")!;
