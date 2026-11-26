@@ -1,3 +1,4 @@
+using DentusClinic.API.Utils;
 using DentusClinic.API.Data;
 using DentusClinic.API.DTOs.Request;
 using DentusClinic.API.DTOs.Response;
@@ -72,7 +73,7 @@ public class PacienteService : IPacienteService
         var prontuario = new Prontuario
         {
             IdPaciente = paciente.Id,
-            DataAbertura = DateOnly.FromDateTime(DateTime.Today)
+            DataAbertura = HorarioBrasil.Hoje()
         };
         _context.Prontuarios.Add(prontuario);
         await _context.SaveChangesAsync();

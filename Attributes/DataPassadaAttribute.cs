@@ -1,3 +1,4 @@
+using DentusClinic.API.Utils;
 using System.ComponentModel.DataAnnotations;
 
 public class DataPassadaAttribute : ValidationAttribute
@@ -10,7 +11,7 @@ public class DataPassadaAttribute : ValidationAttribute
         if (value is not DateOnly data)
             return new ValidationResult("Data inválida.");
 
-        if (data >= DateOnly.FromDateTime(DateTime.Today))
+        if (data >= HorarioBrasil.Hoje())
             return new ValidationResult(ErrorMessage ?? "A data de nascimento não pode ser uma data futura ou o dia atual.");
 
         return ValidationResult.Success;

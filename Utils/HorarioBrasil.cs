@@ -22,4 +22,6 @@ public static class HorarioBrasil
     }
 
     public static DateTime Agora() => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, FusoBrasil);
+
+    public static DateOnly Hoje() => DateOnly.FromDateTime(Agora());
 }

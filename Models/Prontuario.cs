@@ -1,3 +1,5 @@
+using DentusClinic.API.Utils;
+
 namespace DentusClinic.API.Models;
 
 public class Prontuario
@@ -7,7 +9,7 @@ public class Prontuario
     public int IdPaciente { get; set; }
     public Paciente Paciente { get; set; } = null!;
 
-    public DateOnly DataAbertura { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+    public DateOnly DataAbertura { get; set; } = HorarioBrasil.Hoje();
 
     public DateOnly? DataUltimaAtualizacao { get; set; }
 

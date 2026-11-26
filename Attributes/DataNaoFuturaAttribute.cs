@@ -1,3 +1,4 @@
+using DentusClinic.API.Utils;
 using System.ComponentModel.DataAnnotations;
 
 namespace DentusClinic.API.Attributes;
@@ -11,7 +12,7 @@ public class DataNaoFuturaAttribute : ValidationAttribute
 
     protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
     {
-        if (value is DateOnly data && data > DateOnly.FromDateTime(DateTime.Today))
+        if (value is DateOnly data && data > HorarioBrasil.Hoje())
             return new ValidationResult(ErrorMessage);
 
         return ValidationResult.Success;

@@ -1,3 +1,4 @@
+using DentusClinic.API.Utils;
 using DentusClinic.API.DTOs.Request;
 using DentusClinic.API.DTOs.Response;
 using DentusClinic.API.Models;
@@ -54,7 +55,7 @@ public class PlanosService : IPlanosService
             Observacao = request.Observacao,
             Dente = request.Dente,
             VersaoAtual = true,
-            DataAtualizacao = DateOnly.FromDateTime(DateTime.Today)
+            DataAtualizacao = HorarioBrasil.Hoje()
         };
 
         await _planosRepository.AdicionarAsync(plano);
@@ -88,7 +89,7 @@ public class PlanosService : IPlanosService
             IdDentista = idDentista,
             PlanoAnteriorId = planoAtual.Id,
             VersaoAtual = true,
-            DataAtualizacao = DateOnly.FromDateTime(DateTime.Today)
+            DataAtualizacao = HorarioBrasil.Hoje()
         };
 
         await _planosRepository.RegistrarNovaVersaoAsync(planoAtual, novaVersao);

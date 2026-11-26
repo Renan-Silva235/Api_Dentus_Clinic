@@ -1,3 +1,5 @@
+using DentusClinic.API.Utils;
+
 namespace DentusClinic.API.Models;
 
 public class Planos
@@ -19,7 +21,7 @@ public class Planos
 
     public string? Dente { get; set; }
 
-    public DateOnly DataCriacao { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+    public DateOnly DataCriacao { get; set; } = HorarioBrasil.Hoje();
 
     public DateOnly? DataAtualizacao { get; set; }
 
